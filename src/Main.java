@@ -1,6 +1,9 @@
 public class Main {
 
     public static void main(String[] args) {
-	// write your code here
+        SurveyController sc = new SurveyController();
+        sc.start();
+        System.out.println("1010".split("0").length);
+
     }
 }
