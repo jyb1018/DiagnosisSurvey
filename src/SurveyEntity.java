@@ -2,6 +2,7 @@ import java.util.Vector;
 
 public class SurveyEntity {
     // 공개되는 정보
+    private String name;
     private String description;
     private Boolean yn;
 
@@ -12,6 +13,14 @@ public class SurveyEntity {
         this.description = description;
         this.yn = null;
         this.prescriptions = prescriptions;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getDescription() {

@@ -6,13 +6,12 @@ import java.util.Vector;
 class SurveyController {
     private SurveyView view;
     private Vector<SurveyEntity> entities;
-    private AES256 aes256;
+    private SurveyEntity tempSurvey;
     private File file = new File("./data.dat");
 
     SurveyController() {
-        view = new SurveyView();
+        view = new SurveyView(this);
         entities = new Vector<>();
-        aes256 = new AES256();
 
         if(!file.exists()) {
             try {
@@ -25,6 +24,38 @@ class SurveyController {
 
     void start() {
         view.showMain();
+    }
+
+    void menu_newSurvey() {
+
+    }
+
+    void menu_openSurvey() {
+
+    }
+
+    void menu_saveSurvey() {
+
+    }
+
+    void menu_setFont() {
+
+    }
+
+    void menu_info() {
+
+    }
+
+    void survey_submit() {
+
+    }
+
+    void survey_return() {
+
+    }
+
+    void survey_executeAnotherSurvey(SurveyEntity survey) {
+
     }
 
 
@@ -42,7 +73,6 @@ class SurveyController {
         StringBuilder dataStr = new StringBuilder();
         String str;
         while((str = reader.readLine()) != null) {
-            str = aes256.decrypt(str);
             dataStr.append(str);
         }
         String[] splits1 = dataStr.toString().split("\\$");
@@ -62,7 +92,7 @@ class SurveyController {
         for (SurveyEntity entity : entities) {
             dataStr.append(entity.toString());
         }
-        bw.write(aes256.encrypt(dataStr.toString()));
+        bw.write(dataStr.toString());
 
     }
 
