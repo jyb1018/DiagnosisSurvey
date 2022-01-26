@@ -5,13 +5,14 @@ import java.util.Vector;
 
 class SurveyController {
     private SurveyView view;
-    private Vector<SurveyEntity> entities;
+    public Vector<Survey> surveys;
     private SurveyEntity tempSurvey;
     private File file = new File("./data.dat");
 
     SurveyController() {
+        surveys = new Vector<>();
         view = new SurveyView(this);
-        entities = new Vector<>();
+
 
         if(!file.exists()) {
             try {
@@ -80,7 +81,7 @@ class SurveyController {
             String[] splits2 = line.split("\\^");
             String description = splits2[0];
             Vector<String> prescriptions = new Vector<>(Arrays.asList(splits2).subList(1, splits2.length));
-            entities.add(new SurveyEntity(description, prescriptions));
+//            entities.add(new SurveyEntity(description, prescriptions));
         }
 
     }
@@ -89,8 +90,8 @@ class SurveyController {
         OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
         BufferedWriter bw = new BufferedWriter(osw);
         StringBuilder dataStr = new StringBuilder();
-        for (SurveyEntity entity : entities) {
-            dataStr.append(entity.toString());
+        for (Survey survey : surveys) {
+            dataStr.append(survey.toString());
         }
         bw.write(dataStr.toString());
 

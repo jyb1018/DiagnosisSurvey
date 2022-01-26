@@ -1,17 +1,7 @@
-import javax.sound.sampled.Line;
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.LineBorder;
-import javax.swing.border.MatteBorder;
-import javax.swing.plaf.BorderUIResource;
-import javax.swing.plaf.MenuBarUI;
-import javax.swing.plaf.metal.MetalBorders;
-import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.KeyEvent;
-import java.security.Key;
 import java.util.EventListener;
-import java.util.concurrent.Flow;
 
 class SurveyView {
 
@@ -19,18 +9,56 @@ class SurveyView {
     private Font font;
     private SurveyController controller;
 
-    class JSurveyPanel extends JPanel implements EventListener {
-        final SurveyEntity surveyEntity;
-        public JSurveyPanel(SurveyEntity surveyEntity) {
+    class JSurvey extends JPanel {
+        final Survey survey;
+        JList<JSurveyEntity> surveyEntityJList;
+        public JSurvey(Survey survey) {
             super();
-            this.surveyEntity = surveyEntity;
+            this.survey = survey;
+            surveyEntityJList = new JList<>();
 
-            JLabel label = new JLabel(surveyEntity.getName());
+            for (int i = 0; i < survey.getEntities().size(); i++) {
+                surveyEntityJList.add(new JSurveyEntity(survey.getEntities().get(i).getDescription()));
+            }
+
+            this.setSize(new Dimension(10,10));
+
+            JLabel label = new JLabel(survey.getName());
+
             label.setFont(font);
 
+        }
+    }
+
+    class JSurveyEntity extends JPanel {
+
+        String description;
+        Boolean yn;
+
+        public JSurveyEntity(String description) {
+            this.description = description;
+            yn = null;
+
+            this.setLayout(new GridLayout(2, 1));
+
+
+            JLabel descriptionLabel = new JLabel(description);
+            descriptionLabel.setFont(font);
+            this.add(descriptionLabel);
+
+            ButtonGroup ynRadio = new ButtonGroup();
+            JRadioButton yRadio = new JRadioButton("예");
+            JRadioButton nRadio = new JRadioButton("아니오");
+            ynRadio.add(yRadio);
+            ynRadio.add(nRadio);
+
+            JPanel radioPanel = new JPanel();
+            radioPanel.add(yRadio);
+            radioPanel.add(nRadio);
+
+            this.add(radioPanel);
 
         }
-
     }
 
     SurveyView(SurveyController surveyController) {
@@ -92,23 +120,31 @@ class SurveyView {
 
 
         JPanel leftPanel = new JPanel();
-        JList<JButton> surveyList = new JList<>();
-        JScrollPane scroll = new JScrollPane(surveyList);
-        scroll.setVerticalScrollBar(new JScrollBar());
-        scroll.setBorder(null);
+        //TODO JButton 고치기
+        JList<JSurvey> surveyList = new JList<>();
+        JScrollPane scroll1 = new JScrollPane(surveyList);
+        scroll1.setVerticalScrollBar(new JScrollBar());
+        scroll1.setBorder(null);
+
+        //TODO testcode
+        Main.test(controller);
+        JSurvey jSurvey = new JSurvey(controller.surveys.get(0));
+        surveyList.getModel().getElementAt()
+
+        JScrollPane scroll2 = new JScrollPane();
 
 
 
         leftPanel.setBackground(new Color(208, 255, 243));
         surveyList.setBackground(Color.white);
 
-        surveyList.setSize(new Dimension(200, 0));
-        surveyList.setPreferredSize(new Dimension(200, 0));
-        surveyList.setMaximumSize(new Dimension(200, 0));
-        surveyList.setMinimumSize(new Dimension(200, 0));
+        surveyList.setSize(new Dimension(150, 0));
+        surveyList.setPreferredSize(new Dimension(150, 0));
+        surveyList.setMaximumSize(new Dimension(150, 0));
+        surveyList.setMinimumSize(new Dimension(150, 0));
         centerPanel.add(leftPanel, new GridBagConstraints(0, 0, 1, 1, 4.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                 new Insets(0,0,0,0), 0, 0));
-        centerPanel.add(scroll, new GridBagConstraints(1, 0, 1, 1, 0.0, 1.0, GridBagConstraints.EAST, GridBagConstraints.VERTICAL,
+        centerPanel.add(scroll1, new GridBagConstraints(1, 0, 1, 1, 0.0, 1.0, GridBagConstraints.EAST, GridBagConstraints.VERTICAL,
                 new Insets(0,0,0,0), 0, 0));
 
 

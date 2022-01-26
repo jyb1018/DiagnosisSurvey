@@ -1,8 +1,8 @@
 import java.util.Vector;
 
 public class SurveyEntity {
+
     // 공개되는 정보
-    private String name;
     private String description;
     private Boolean yn;
 
@@ -11,17 +11,10 @@ public class SurveyEntity {
 
     public SurveyEntity(String description, Vector<String> prescriptions) {
         this.description = description;
-        this.yn = null;
+        yn = null;
         this.prescriptions = prescriptions;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public String getDescription() {
         return description;
@@ -29,14 +22,6 @@ public class SurveyEntity {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public boolean isYn() {
-        return yn;
-    }
-
-    public void setYn(boolean yn) {
-        this.yn = yn;
     }
 
     public Vector<String> getPrescriptions() {
