@@ -9,6 +9,11 @@ public class Survey {
         this.entities = entities;
     }
 
+    public Survey() {
+        this.name = "새 설문";
+        this.entities = new Vector<>();
+    }
+
     public String getName() {
         return name;
     }

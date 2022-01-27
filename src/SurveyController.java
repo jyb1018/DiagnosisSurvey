@@ -6,7 +6,6 @@ import java.util.Vector;
 class SurveyController {
     private SurveyView view;
     public Vector<Survey> surveys;
-    private SurveyEntity tempSurvey;
     private File file = new File("./data.dat");
 
     SurveyController() {
