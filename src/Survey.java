@@ -14,6 +14,8 @@ public class Survey {
         this.entities = new Vector<>();
     }
 
+
+
     public String getName() {
         return name;
     }

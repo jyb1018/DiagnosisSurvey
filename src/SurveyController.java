@@ -6,20 +6,12 @@ import java.util.Vector;
 class SurveyController {
     private SurveyView view;
     public Vector<Survey> surveys;
-    private File file = new File("./data.dat");
 
     SurveyController() {
         surveys = new Vector<>();
         view = new SurveyView(this);
 
 
-        if(!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     void start() {
@@ -65,8 +57,14 @@ class SurveyController {
 
     }
 
+
+    void appendSurvey(Survey survey) {
+        surveys.add(survey);
+    }
+
+    // TODO 다시짤것
     // File 연동
-    void fileRead() throws Exception {
+    void fileRead(File file) throws Exception {
         InputStreamReader isr = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
         BufferedReader reader = new BufferedReader(isr);
 
@@ -80,12 +78,12 @@ class SurveyController {
             String[] splits2 = line.split("\\^");
             String description = splits2[0];
             Vector<String> prescriptions = new Vector<>(Arrays.asList(splits2).subList(1, splits2.length));
-//            entities.add(new SurveyEntity(description, prescriptions));
+//                entities.add(new SurveyEntity(description, prescriptions));
         }
 
     }
 
-    void fileWrite() throws Exception {
+    void fileWrite(File file) throws Exception {
         OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
         BufferedWriter bw = new BufferedWriter(osw);
         StringBuilder dataStr = new StringBuilder();

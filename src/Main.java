@@ -1,3 +1,6 @@
+import javax.swing.*;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.Vector;
 
 public class Main {
@@ -17,13 +20,13 @@ public class Main {
         Vector<SurveyEntity> entities = new Vector<>();
         entities.add(entity1);
         entities.add(entity2);
-        sc.surveys.add(new Survey("설문1", entities));
+
+        sc.appendSurvey(new Survey("설문1", entities));
     }
 
     public static void main(String[] args) {
+
         SurveyController sc = new SurveyController();
-
-
 
         sc.start();
 
