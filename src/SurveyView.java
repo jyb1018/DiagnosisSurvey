@@ -1,13 +1,16 @@
 import assets.SurveyImageIcons;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
+import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Vector;
+import java.util.concurrent.Flow;
 
 
 class SurveyView implements ActionListener, MouseListener {
@@ -22,6 +25,7 @@ class SurveyView implements ActionListener, MouseListener {
     private JFileChooser jFileChooser_open = null;
     private JFileChooser jFileChooser_save = null;
 
+    private JSurveyEditDialog surveyEditDialog;
 
     //정보
     private JTextArea aboutArea;
@@ -106,9 +110,69 @@ class SurveyView implements ActionListener, MouseListener {
         }
     }
 
+    class JSurveyEditDialog extends JDialog implements EventListener {
+
+        private JList<String> list;
+        private JTextField inputField;
+        private JButton addBtn;
+        private JButton delBtn;
+        private JButton editPrescriptionsBtn;
+        private JButton confirmBtn;
+        private JButton cancelBtn;
+        private JButton applyBtn;
+
+        private DefaultListModel<String> model;
+        private JScrollPane jScrollPane;
+
+        public JSurveyEditDialog() {
+            this.setTitle("설문 편집");
+            this.setModal(true);
+            this.setLocationByPlatform(true);
+            this.setPreferredSize(new Dimension(800, 600));
+            this.setSize(new Dimension(800, 600));
+            this.setResizable(false);
+
+            model = new DefaultListModel<>();
+            list = new JList<>();
+            inputField = new JTextField(25);
+            addBtn = new JButton("추가");
+            delBtn = new JButton("삭제");
+            editPrescriptionsBtn = new JButton("구성요소 편집");
+            confirmBtn = new JButton("확인");
+            cancelBtn = new JButton("취소");
+            applyBtn = new JButton("적용");
+
+            inputField.setFont(new Font("맑은 고딕", Font.PLAIN, 20));
+
+            this.setLayout(new BorderLayout());
+
+            JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+            topPanel.add(inputField);
+            topPanel.add(addBtn);
+            topPanel.add(delBtn);
+            topPanel.add(editPrescriptionsBtn);
+            topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+            jScrollPane = new JScrollPane(list);
+            jScrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+            JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT,10, 10));
+            bottomPanel.add(confirmBtn);
+            bottomPanel.add(cancelBtn);
+            bottomPanel.add(applyBtn);
+
+
+            this.add(topPanel, BorderLayout.NORTH);
+            this.add(jScrollPane, BorderLayout.CENTER);
+            this.add(bottomPanel, BorderLayout.SOUTH);
+
+        }
+    }
+
     SurveyView(SurveyController surveyController) {
         controller = surveyController;
         jSurveyMap = new HashMap<>();
+
 
 
         font = new Font("맑은 고딕", Font.PLAIN, 13);
@@ -122,6 +186,10 @@ class SurveyView implements ActionListener, MouseListener {
         jFrame.setIconImage(SurveyImageIcons.surveyIcon.getImage());
         Container container = jFrame.getContentPane();
         container.setLayout(new BorderLayout());
+
+
+        // 사전 인스턴스화 필요한 컴포넌트
+        surveyEditDialog = new JSurveyEditDialog();
 
 
         // 상단 메뉴 바
@@ -345,35 +413,8 @@ class SurveyView implements ActionListener, MouseListener {
 
     // TODO 계속 작성해야함, JList로
     void editSurvey_Dialog(Survey survey) {
-        // if null, init
-        if (editSurveyDialog == null) {
-            editSurveyDialog = new JDialog();
-            editSurveyDialog.setModal(true);
-            editSurveyDialog.setTitle("설문 편집");
-            editSurveyDialog.setLocationByPlatform(true);
-            editSurveyDialog.setIconImage(SurveyImageIcons.editIcon.getImage());
-            editSurveyDialog.setSize(new Dimension(800, 600));
+        surveyEditDialog.setVisible(true);
 
-
-            JButton appendBtn = new JButton("추가");
-            JButton removeBtn = new JButton("삭제");
-            JButton editPrescriptionBtn = new JButton("처방 편집");
-
-
-            JScrollPane scrollPane_editSurvey = new JScrollPane();
-
-
-        }
-
-        editSurveyDialog.removeAll();
-        DefaultListModel<String> model = new DefaultListModel<>();
-        JList<String> surveyList = new JList<>(model);
-
-        for (SurveyEntity entity : survey.getEntities()) {
-            model.addElement(entity.getDescription());
-        }
-
-        editSurveyDialog.setVisible(true);
     }
 
     void editSurveyEntity_Dialog() {
