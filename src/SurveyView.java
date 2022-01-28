@@ -193,14 +193,6 @@ class SurveyView implements ActionListener, MouseListener {
         right_dim.height = 0;
         rightPanel.setPreferredSize(right_dim);
 
-        //TODO testcode starts
-        Main.test(controller);
-        for (int i = 0; i < 100; i++) {
-            appendSurvey(new Survey());
-        }
-
-        //TODO testcode ends
-
 
         FlowLayout surveyLayout = new FlowLayout();
         surveyLayout.setVgap(10);
@@ -242,6 +234,8 @@ class SurveyView implements ActionListener, MouseListener {
         dimension.height += 110;
         rightPanel.setPreferredSize(dimension);
         showSurveyEntities(survey);
+
+        tempSurvey = survey;
         refresh();
 
         JScrollBar scrollBar1 = ((JScrollPane) leftPanel.getParent().getParent()).getVerticalScrollBar();
@@ -258,9 +252,11 @@ class SurveyView implements ActionListener, MouseListener {
         rightPanel.remove(jSurvey);
 
         //현재 표시중 설문일 경우
-        if (survey == tempSurvey && jSurveyMap.size() == 1) {
-
-            tempSurvey = ((JSurvey) rightPanel.getComponents()[0]).getSurvey();
+        if (survey == tempSurvey) {
+            if (rightPanel.getComponents().length == 0)
+                tempSurvey = null;
+            else
+                tempSurvey = ((JSurvey) rightPanel.getComponents()[0]).getSurvey();
             showSurveyEntities(tempSurvey);
         }
         Dimension dimension = rightPanel.getPreferredSize();
@@ -271,6 +267,9 @@ class SurveyView implements ActionListener, MouseListener {
 
 
     void showSurveyEntities(Survey survey) {
+        leftPanel.removeAll();
+        if(survey == null)
+            return;
         if (tempSurvey != null)
             jSurveyMap.get(tempSurvey.hashCode()).setBackground(new Color(178, 176, 66));
         tempSurvey = survey;
@@ -280,6 +279,7 @@ class SurveyView implements ActionListener, MouseListener {
             leftPanel.add(surveyEntity);
         }
 
+        refresh();
     }
 
     void showMain() {
@@ -342,7 +342,9 @@ class SurveyView implements ActionListener, MouseListener {
         dialog.setVisible(true);
     }
 
-    void editSurvey_Dialog() {
+
+    // TODO 계속 작성해야함, JList로
+    void editSurvey_Dialog(Survey survey) {
         // if null, init
         if (editSurveyDialog == null) {
             editSurveyDialog = new JDialog();
@@ -352,8 +354,30 @@ class SurveyView implements ActionListener, MouseListener {
             editSurveyDialog.setIconImage(SurveyImageIcons.editIcon.getImage());
             editSurveyDialog.setSize(new Dimension(800, 600));
 
+
+            JButton appendBtn = new JButton("추가");
+            JButton removeBtn = new JButton("삭제");
+            JButton editPrescriptionBtn = new JButton("처방 편집");
+
+
+            JScrollPane scrollPane_editSurvey = new JScrollPane();
+
+
         }
+
+        editSurveyDialog.removeAll();
+        DefaultListModel<String> model = new DefaultListModel<>();
+        JList<String> surveyList = new JList<>(model);
+
+        for (SurveyEntity entity : survey.getEntities()) {
+            model.addElement(entity.getDescription());
+        }
+
         editSurveyDialog.setVisible(true);
+    }
+
+    void editSurveyEntity_Dialog() {
+
     }
 
 
@@ -409,6 +433,9 @@ class SurveyView implements ActionListener, MouseListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() instanceof JMenuItem) {
+
+            JPopupMenu parent;
+            JSurvey targetJSurvey;
             //메뉴일경우
             switch (e.getActionCommand()) {
                 // 상단 메뉴바
@@ -419,12 +446,12 @@ class SurveyView implements ActionListener, MouseListener {
                     savePreset();
                     break;
                 case "새 설문":
-                    appendSurvey(new Survey());
+                    controller.appendSurvey(new Survey());
                     break;
                 case "모든 설문 삭제":
                     for (JSurvey jSurvey : jSurveyMap.values()) {
-                        removeSurvey(jSurvey.getSurvey());
-                        jSurveyMap.remove(jSurvey.hashCode());
+                        controller.removeSurvey(jSurvey.getSurvey());
+                        jSurveyMap.remove(jSurvey.getSurvey().hashCode());
                     }
                     break;
                 case "폰트":
@@ -439,11 +466,15 @@ class SurveyView implements ActionListener, MouseListener {
 
                 // 우클릭 팝업
                 case "편집":
-                    editSurvey_Dialog();
+                     parent = (JPopupMenu) ((JMenuItem) e.getSource()).getParent();
+                    targetJSurvey = ((JSurvey) parent.getInvoker());
+                    editSurvey_Dialog(targetJSurvey.getSurvey());
                     break;
                 case "삭제":
-                    JPopupMenu parent = (JPopupMenu) ((JMenuItem) e.getSource()).getParent();
-                    removeSurvey(((JSurvey) parent.getInvoker()).getSurvey());
+                    parent = (JPopupMenu) ((JMenuItem) e.getSource()).getParent();
+                    targetJSurvey = ((JSurvey) parent.getInvoker());
+                    controller.removeSurvey(targetJSurvey.getSurvey());
+                    jSurveyMap.remove(targetJSurvey.getSurvey().hashCode());
                     break;
             }
         }

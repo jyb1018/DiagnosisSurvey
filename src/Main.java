@@ -22,12 +22,17 @@ public class Main {
         entities.add(entity2);
 
         sc.appendSurvey(new Survey("설문1", entities));
+
     }
 
     public static void main(String[] args) {
 
         SurveyController sc = new SurveyController();
 
+        for (int i = 0; i < 4; i++) {
+            Main.test(sc);
+
+        }
         sc.start();
 
     }

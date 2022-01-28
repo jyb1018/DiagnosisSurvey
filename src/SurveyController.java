@@ -60,6 +60,12 @@ class SurveyController {
 
     void appendSurvey(Survey survey) {
         surveys.add(survey);
+        view.appendSurvey(survey);
+    }
+
+    void removeSurvey(Survey survey) {
+        surveys.remove(survey);
+        view.removeSurvey(survey);
     }
 
     // TODO 다시짤것
