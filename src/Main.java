@@ -1,6 +1,4 @@
-import javax.swing.*;
 import java.util.Locale;
-import java.util.ResourceBundle;
 import java.util.Vector;
 
 public class Main {
@@ -33,6 +31,7 @@ public class Main {
             Main.test(sc);
 
         }
+
         sc.start();
 
     }

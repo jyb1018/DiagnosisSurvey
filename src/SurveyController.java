@@ -1,14 +1,15 @@
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Vector;
 
 class SurveyController {
     private SurveyView view;
-    public Vector<Survey> surveys;
+    public HashMap<JSurvey, Survey> surveyMap;
 
     SurveyController() {
-        surveys = new Vector<>();
+        surveyMap = new HashMap<>();
         view = new SurveyView(this);
 
 
@@ -57,15 +58,40 @@ class SurveyController {
 
     }
 
-
-    void appendSurvey(Survey survey) {
-        surveys.add(survey);
-        view.appendSurvey(survey);
+    void editSurvey(JSurvey jSurvey) {
+        surveyMap.get(jSurvey).applyJSurvey(jSurvey);
+        view.refresh();
     }
 
-    void removeSurvey(Survey survey) {
-        surveys.remove(survey);
-        view.removeSurvey(survey);
+    JSurvey makeJSurvey(Survey survey) {
+        JSurvey ret = new JSurvey();
+        ret.setSurveyName(survey.getName());
+        for (SurveyEntity entity :survey.getEntities()) {
+            ret.getJSurveyEntities().add(makeJSurveyEntity(entity, ret));
+        }
+        return ret;
+    }
+
+    JSurveyEntity makeJSurveyEntity(SurveyEntity entity, JSurvey jSurvey) {
+        Vector<String> prescriptions = new Vector<>(entity.getPrescriptions());
+        return new JSurveyEntity(entity.getDescription(), prescriptions, jSurvey);
+    }
+
+    void appendSurvey(Survey survey) {
+        JSurvey jSurvey = makeJSurvey(survey);
+        surveyMap.put(jSurvey, survey);
+        view.appendJSurvey(jSurvey);
+    }
+
+    void removeSurvey(JSurvey jSurvey) {
+        surveyMap.remove(jSurvey);
+        view.removeJSurvey(jSurvey);
+    }
+
+    void renameSurvey(JSurvey jSurvey, String name) {
+        surveyMap.get(jSurvey).setName(name);
+        jSurvey.setSurveyName(name);
+        view.refresh();
     }
 
     // TODO 다시짤것
@@ -93,12 +119,14 @@ class SurveyController {
         OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
         BufferedWriter bw = new BufferedWriter(osw);
         StringBuilder dataStr = new StringBuilder();
-        for (Survey survey : surveys) {
+        for (Survey survey : surveyMap.values()) {
             dataStr.append(survey.toString());
         }
         bw.write(dataStr.toString());
 
     }
+
+
 
     // DB 연동
 //    void insertDB() {

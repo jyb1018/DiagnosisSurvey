@@ -1,16 +1,15 @@
 import assets.SurveyImageIcons;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
-import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Vector;
-import java.util.concurrent.Flow;
+
+import opensource.say.swing.JFontChooser;
 
 
 class SurveyView implements ActionListener, MouseListener {
@@ -19,11 +18,13 @@ class SurveyView implements ActionListener, MouseListener {
     private JPanel rightPanel;
     private JFrame jFrame;
     private Font font;
-    private SurveyController controller;
+    public static SurveyController controller = null;
 
     private JPopupMenu jPopupMenu = null;
     private JFileChooser jFileChooser_open = null;
     private JFileChooser jFileChooser_save = null;
+
+    private JFontChooser jFontChooser;
 
     private JSurveyEditDialog surveyEditDialog;
 
@@ -33,143 +34,30 @@ class SurveyView implements ActionListener, MouseListener {
     //중첩 클래스에서 ActionListener 접근용
     private final SurveyView surveyView = this;
 
-    private Survey tempSurvey = null;
+    private JSurvey tempJSurvey = null;
 
     HashMap<Integer, JSurvey> jSurveyMap;
     private JDialog editSurveyDialog;
 
 
-    class JSurvey extends JPanel {
-
-        private final Survey survey;
-        Vector<JSurveyEntity> jSurveyEntities;
-
-        public JSurvey(Survey survey) {
-            super();
-            this.survey = survey;
-            jSurveyEntities = new Vector<>();
-
-
-            if (survey != null)
-                for (int i = 0; i < survey.getEntities().size(); i++) {
-                    jSurveyEntities.add(new JSurveyEntity(survey.getEntities().get(i).getDescription()));
-                }
-
-            this.setSize(new Dimension(100, 100));
-            this.setPreferredSize(new Dimension(100, 100));
-            this.setMinimumSize(new Dimension(100, 100));
-            this.setMaximumSize(new Dimension(100, 100));
-            this.setBackground(new Color(178, 176, 66));
-
-
-            JLabel label = new JLabel(survey != null ? survey.getName() : "새 설문");
-            label.setFont(font);
-            this.add(label);
-
-        }
-
-        public Survey getSurvey() {
-            return survey;
-        }
-    }
-
-    class JSurveyEntity extends JPanel {
-
-        String description;
-        Boolean yn;
-
-        public JSurveyEntity(String description) {
-            this.description = description;
-            yn = null;
-
-            this.setLayout(new GridLayout(2, 1));
-
-
-            JLabel descriptionLabel = new JLabel(description);
-            descriptionLabel.setFont(font);
-            this.add(descriptionLabel);
-
-            ButtonGroup ynRadio = new ButtonGroup();
-            JRadioButton yRadio = new JRadioButton("예");
-            JRadioButton nRadio = new JRadioButton("아니오");
-            ynRadio.add(yRadio);
-            ynRadio.add(nRadio);
-
-            JPanel radioPanel = new JPanel();
-            radioPanel.add(yRadio);
-            radioPanel.add(nRadio);
-
-            this.add(radioPanel);
-
-        }
-    }
-
-    class JSurveyEditEntity extends JPanel {
-        public JSurveyEditEntity() {
-
-        }
-    }
-
-    class JSurveyEditDialog extends JDialog implements EventListener {
-
-        private JList<String> list;
-        private JTextField inputField;
-        private JButton addBtn;
-        private JButton delBtn;
-        private JButton editPrescriptionsBtn;
-        private JButton confirmBtn;
-        private JButton cancelBtn;
-        private JButton applyBtn;
-
-        private DefaultListModel<String> model;
-        private JScrollPane jScrollPane;
-
-        public JSurveyEditDialog() {
-            this.setTitle("설문 편집");
-            this.setModal(true);
-            this.setLocationByPlatform(true);
-            this.setPreferredSize(new Dimension(800, 600));
-            this.setSize(new Dimension(800, 600));
-            this.setResizable(false);
-
-            model = new DefaultListModel<>();
-            list = new JList<>();
-            inputField = new JTextField(25);
-            addBtn = new JButton("추가");
-            delBtn = new JButton("삭제");
-            editPrescriptionsBtn = new JButton("구성요소 편집");
-            confirmBtn = new JButton("확인");
-            cancelBtn = new JButton("취소");
-            applyBtn = new JButton("적용");
-
-            inputField.setFont(new Font("맑은 고딕", Font.PLAIN, 20));
-
-            this.setLayout(new BorderLayout());
-
-            JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-            topPanel.add(inputField);
-            topPanel.add(addBtn);
-            topPanel.add(delBtn);
-            topPanel.add(editPrescriptionsBtn);
-            topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-            jScrollPane = new JScrollPane(list);
-            jScrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-            JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT,10, 10));
-            bottomPanel.add(confirmBtn);
-            bottomPanel.add(cancelBtn);
-            bottomPanel.add(applyBtn);
-
-
-            this.add(topPanel, BorderLayout.NORTH);
-            this.add(jScrollPane, BorderLayout.CENTER);
-            this.add(bottomPanel, BorderLayout.SOUTH);
-
-        }
-    }
 
     SurveyView(SurveyController surveyController) {
+
+        // window style
+        if (System.getProperty("os.name").toLowerCase().contains("win"))
+            try {
+                UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (UnsupportedLookAndFeelException e) {
+                e.printStackTrace();
+            }
+
+
         controller = surveyController;
         jSurveyMap = new HashMap<>();
 
@@ -189,7 +77,7 @@ class SurveyView implements ActionListener, MouseListener {
 
 
         // 사전 인스턴스화 필요한 컴포넌트
-        surveyEditDialog = new JSurveyEditDialog();
+        surveyEditDialog = new JSurveyEditDialog(controller, this);
 
 
         // 상단 메뉴 바
@@ -209,6 +97,7 @@ class SurveyView implements ActionListener, MouseListener {
         menu_newSurvey.addActionListener(this);
         menu_deleteAllSurvey.addActionListener(this);
         editMenu.add(menu_newSurvey);
+        editMenu.addSeparator();
         editMenu.add(menu_deleteAllSurvey);
 
 
@@ -256,11 +145,17 @@ class SurveyView implements ActionListener, MouseListener {
         JScrollPane scroll_left = new JScrollPane();
         scroll_left.setViewportView(leftPanel);
         scroll_left.getVerticalScrollBar().setUnitIncrement(16);
+        scroll_left.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scroll_left.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
 
         Dimension right_dim = rightPanel.getPreferredSize();
         right_dim.height = 0;
         rightPanel.setPreferredSize(right_dim);
 
+        Dimension left_dim = leftPanel.getPreferredSize();
+        left_dim.height = 0;
+        leftPanel.setPreferredSize(left_dim);
 
         FlowLayout surveyLayout = new FlowLayout();
         surveyLayout.setVgap(10);
@@ -269,6 +164,12 @@ class SurveyView implements ActionListener, MouseListener {
         right_dim.height += 10;
         rightPanel.setPreferredSize(right_dim);
 
+        FlowLayout surveyLayout2 = new FlowLayout();
+        surveyLayout2.setVgap(10);
+        leftPanel.setLayout(surveyLayout2);
+        left_dim = leftPanel.getPreferredSize();
+        left_dim.height += 10;
+        leftPanel.setPreferredSize(left_dim);
 
         leftPanel.setBackground(new Color(208, 255, 243));
         rightPanel.setBackground(Color.white);
@@ -283,27 +184,51 @@ class SurveyView implements ActionListener, MouseListener {
                 new Insets(0, 0, 0, 0), 0, 0));
 
 
+        // 폰트 선택
+        jFontChooser = new JFontChooser();
+        jFontChooser.setFont(font);
+
         // 정보 다이얼로그
         aboutArea = new JTextArea();
         aboutArea.setEditable(false);
         aboutArea.setFont(new Font("맑은 고딕", Font.PLAIN, 18));
-        aboutArea.append("License\n" +
-                "응애\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n응애");
+        aboutArea.setLineWrap(true);
+        aboutArea.append("License\n\n\n\n" +
+
+                        "Copyright 2004-2008 Masahiko SAWAI All Rights Reserved.\n\n" +
+                        "Permission is hereby granted, free of charge, to any person obtaining" +
+                        "a copy of this software and associated documentation files (the \"Software\")," +
+                        "to deal in the Software without restriction, including without limitation" +
+                        "the rights to use, copy, modify, merge, publish, distribute, sublicense," +
+                        "and/or sell copies of the Software, and to permit persons to whom" +
+                        "the Software is furnished to do so, subject to the following conditions:\n\n" +
+                        "The above copyright notice and this permission notice shall be included" +
+                        "in all copies or substantial portions of the Software.\n\n" +
+                        "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS" +
+                        "OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY," +
+                        "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL" +
+                        "THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER" +
+                        "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM," +
+                        "OUT OF OR IN CONNECTION WITH THE SOFTWARE" +
+                        "OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n\n\n" +
+                        "안녕"
+        );
+
+
 
     }
 
 
-    void appendSurvey(Survey survey) {
-        JSurvey jSurvey = new JSurvey(survey);
+    void appendJSurvey(JSurvey jSurvey) {
         jSurvey.addMouseListener(this);
-        jSurveyMap.put(survey.hashCode(), jSurvey);
+        jSurveyMap.put(jSurvey.hashCode(), jSurvey);
         rightPanel.add(jSurvey);
         Dimension dimension = rightPanel.getPreferredSize();
         dimension.height += 110;
         rightPanel.setPreferredSize(dimension);
-        showSurveyEntities(survey);
+        showSurveyEntities(jSurvey);
 
-        tempSurvey = survey;
+        tempJSurvey = jSurvey;
         refresh();
 
         JScrollBar scrollBar1 = ((JScrollPane) leftPanel.getParent().getParent()).getVerticalScrollBar();
@@ -314,18 +239,17 @@ class SurveyView implements ActionListener, MouseListener {
 
     }
 
-    void removeSurvey(Survey survey) {
-        JSurvey jSurvey = jSurveyMap.get(survey.hashCode());
-        leftPanel.removeAll();
+    void removeJSurvey(JSurvey jSurvey) {
         rightPanel.remove(jSurvey);
 
         //현재 표시중 설문일 경우
-        if (survey == tempSurvey) {
+        if (jSurvey == tempJSurvey) {
+            leftPanel.removeAll();
             if (rightPanel.getComponents().length == 0)
-                tempSurvey = null;
+                tempJSurvey = null;
             else
-                tempSurvey = ((JSurvey) rightPanel.getComponents()[0]).getSurvey();
-            showSurveyEntities(tempSurvey);
+                tempJSurvey = (JSurvey) rightPanel.getComponents()[0];
+            showSurveyEntities(tempJSurvey);
         }
         Dimension dimension = rightPanel.getPreferredSize();
         dimension.height -= 110;
@@ -334,17 +258,21 @@ class SurveyView implements ActionListener, MouseListener {
     }
 
 
-    void showSurveyEntities(Survey survey) {
+
+
+    void showSurveyEntities(JSurvey jSurvey) {
+
+        Dimension dimension = leftPanel.getPreferredSize();
         leftPanel.removeAll();
-        if(survey == null)
+        if(jSurvey == null)
             return;
-        if (tempSurvey != null)
-            jSurveyMap.get(tempSurvey.hashCode()).setBackground(new Color(178, 176, 66));
-        tempSurvey = survey;
-        JSurvey jSurvey = jSurveyMap.get(survey.hashCode());
+        if (tempJSurvey != null)
+            jSurveyMap.get(tempJSurvey.hashCode()).setBackground(new Color(178, 176, 66));
+        tempJSurvey = jSurvey;
         jSurvey.setBackground(new Color(77, 79, 189));
-        for (JSurveyEntity surveyEntity : jSurvey.jSurveyEntities) {
-            leftPanel.add(surveyEntity);
+        for (JSurveyEntity jSurveyEntity : jSurvey.getJSurveyEntities()) {
+            dimension.height += jSurveyEntity.getPreferredSize().getHeight();
+            leftPanel.add(jSurveyEntity);
         }
 
         refresh();
@@ -354,18 +282,7 @@ class SurveyView implements ActionListener, MouseListener {
         jFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         jFrame.pack();
         jFrame.setLocationByPlatform(true);
-        if (System.getProperty("os.name").toLowerCase().contains("win"))
-            try {
-                UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (UnsupportedLookAndFeelException e) {
-                e.printStackTrace();
-            }
+
 
 
         // 한국어
@@ -373,11 +290,12 @@ class SurveyView implements ActionListener, MouseListener {
     }
 
     void setFont_Dialog() {
-        JDialog dialog = new JDialog();
-        dialog.setModal(true);
-
-        dialog.setVisible(true);
-
+        jFontChooser.showDialog(jFrame);
+        font = jFontChooser.getFont();
+        for (JSurvey jSurvey : jSurveyMap.values()) {
+            jSurvey.setFontByChooser(font);
+        }
+        refresh();
     }
 
     void help_Dialog() {
@@ -411,9 +329,11 @@ class SurveyView implements ActionListener, MouseListener {
     }
 
 
-    // TODO 계속 작성해야함, JList로
-    void editSurvey_Dialog(Survey survey) {
+    void editSurvey_Dialog(JSurvey jSurvey) {
+        surveyEditDialog.setJSurvey(jSurvey);
         surveyEditDialog.setVisible(true);
+        showSurveyEntities(jSurvey);
+        refresh();
 
     }
 
@@ -470,6 +390,13 @@ class SurveyView implements ActionListener, MouseListener {
         JOptionPane.showMessageDialog(jFrame, "성공적으로 저장했습니다.");
     }
 
+    public int getJFrameState() {
+        return jFrame.getState();
+    }
+
+    public void setJFrameState(int state) {
+        jFrame.setState(state);
+    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -490,9 +417,11 @@ class SurveyView implements ActionListener, MouseListener {
                     controller.appendSurvey(new Survey());
                     break;
                 case "모든 설문 삭제":
-                    for (JSurvey jSurvey : jSurveyMap.values()) {
-                        controller.removeSurvey(jSurvey.getSurvey());
-                        jSurveyMap.remove(jSurvey.getSurvey().hashCode());
+                    // ConcurrentModificationException's Solution
+                    Vector<JSurvey> values = new Vector<>(jSurveyMap.values());
+                    for (JSurvey jSurvey : values) {
+                        controller.removeSurvey(jSurvey);
+                        jSurveyMap.remove(jSurvey.hashCode());
                     }
                     break;
                 case "폰트":
@@ -506,20 +435,30 @@ class SurveyView implements ActionListener, MouseListener {
                     break;
 
                 // 우클릭 팝업
+                case "이름 바꾸기":
+                    parent = (JPopupMenu) ((JMenuItem) e.getSource()).getParent();
+                    targetJSurvey = ((JSurvey) parent.getInvoker());
+                    // TODO 이거 가능하면 깔끔하게 JDialog 새로 만들어서 보내줄것
+                    String name = JOptionPane.showInputDialog("설문의 이름을 새로 입력하세요.");
+                    if(name != null)
+                        controller.renameSurvey(targetJSurvey, name);
+                    break;
                 case "편집":
                      parent = (JPopupMenu) ((JMenuItem) e.getSource()).getParent();
                     targetJSurvey = ((JSurvey) parent.getInvoker());
-                    editSurvey_Dialog(targetJSurvey.getSurvey());
+                    editSurvey_Dialog(targetJSurvey);
                     break;
                 case "삭제":
                     parent = (JPopupMenu) ((JMenuItem) e.getSource()).getParent();
                     targetJSurvey = ((JSurvey) parent.getInvoker());
-                    controller.removeSurvey(targetJSurvey.getSurvey());
-                    jSurveyMap.remove(targetJSurvey.getSurvey().hashCode());
+                    controller.removeSurvey(targetJSurvey);
+                    jSurveyMap.remove(targetJSurvey.hashCode());
                     break;
             }
         }
     }
+
+
 
     @Override
     public void mouseClicked(MouseEvent e) {
@@ -528,17 +467,22 @@ class SurveyView implements ActionListener, MouseListener {
             jPopupMenu = new JPopupMenu();
             JMenuItem editItem = new JMenuItem("편집", KeyEvent.VK_E);
             JMenuItem deleteItem = new JMenuItem("삭제", KeyEvent.VK_D);
+            JMenuItem renameItem = new JMenuItem("이름 바꾸기", KeyEvent.VK_M);
 
             editItem.addActionListener(this);
             deleteItem.addActionListener(this);
+            renameItem.addActionListener(this);
+
 
             jPopupMenu.add(editItem);
+            jPopupMenu.addSeparator();
             jPopupMenu.add(deleteItem);
+            jPopupMenu.add(renameItem);
         }
 
 
         if (SwingUtilities.isLeftMouseButton(e))
-            showSurveyEntities(((JSurvey) e.getComponent()).getSurvey());
+            showSurveyEntities((JSurvey) e.getComponent());
         else if (SwingUtilities.isRightMouseButton(e))
             jPopupMenu.show(e.getComponent(), e.getX(), e.getY());
 

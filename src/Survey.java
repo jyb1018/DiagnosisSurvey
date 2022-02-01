@@ -15,7 +15,6 @@ public class Survey {
     }
 
 
-
     public String getName() {
         return name;
     }
@@ -39,5 +38,13 @@ public class Survey {
             str.append("\\");
         }
         return str.toString();
+    }
+
+    public void applyJSurvey(JSurvey jSurvey) {
+        name = jSurvey.getName();
+        entities.removeAllElements();
+        for (JSurveyEntity jEntity : jSurvey.getJSurveyEntities()) {
+            entities.add(new SurveyEntity(jEntity.getDescription(), jEntity.getPrescriptions()));
+        }
     }
 }
