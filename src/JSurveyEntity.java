@@ -11,27 +11,31 @@ public class JSurveyEntity extends JPanel {
     private Vector<String> prescriptions;
     private Boolean yn;
 
-    public JSurveyEntity(String description, Vector<String> prescriptions, JSurvey jSurvey) {
+    public JSurveyEntity(String description, Vector<String> prescriptions, JSurvey jSurvey, Font font) {
         super();
         this.prescriptions = prescriptions;
         this.description = description;
         this.jSurvey = jSurvey;
         yn = null;
 
-        this.setLayout(new GridLayout(2, 1));
+        this.setLayout(new BorderLayout());
         this.setBackground(Color.white);
 
 
-        this.setPreferredSize(new Dimension(620, 120));
+        this.setPreferredSize(new Dimension(610, 120));
+        this.setMinimumSize(new Dimension(610, 120));
+        this.setMaximumSize(new Dimension(610, 360));
+
+        this.setBorder(BorderFactory.createEmptyBorder(10 ,10 ,10, 10));
 
 
         descriptionLabel = new JTextArea(description);
         descriptionLabel.setLineWrap(true);
-        descriptionLabel.setMaximumSize(new Dimension(600, 600));
-        descriptionLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
+        descriptionLabel.setMaximumSize(new Dimension(600, 120));
+        descriptionLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         descriptionLabel.setEditable(false);
-        descriptionLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 13));
-        this.add(descriptionLabel);
+        descriptionLabel.setFont(font);
+        this.add(descriptionLabel, BorderLayout.CENTER);
 
         ButtonGroup ynRadio = new ButtonGroup();
         JRadioButton yRadio = new JRadioButton("예");
@@ -46,7 +50,7 @@ public class JSurveyEntity extends JPanel {
         radioPanel.add(yRadio);
         radioPanel.add(nRadio);
 
-        this.add(radioPanel);
+        this.add(radioPanel, BorderLayout.SOUTH);
 
     }
 
@@ -84,19 +88,7 @@ public class JSurveyEntity extends JPanel {
         this.yn = yn;
     }
 
-    private Vector<String> cutString(String str, int length) {
-        Vector<String> v = new Vector<>();
-        int prev_idx = -1;
-        for (int i = 1; i < str.length(); i++) {
-            if(i % length == 0) {
-                v.add(str.substring(prev_idx+1, i+1));
-                prev_idx = i;
-            }
-        }
-        if(prev_idx != str.length()-1)
-            v.add(str.substring(prev_idx+1));
-        return v;
-    }
+
 
 
     public void setFontByChooser(Font font) {

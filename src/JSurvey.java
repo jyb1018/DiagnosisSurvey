@@ -7,11 +7,11 @@ public class JSurvey extends JPanel {
     private Vector<JSurveyEntity> jSurveyEntities;
     private JLabel surveyNameLabel;
 
-    public JSurvey() {
-        this(new Vector<>(), null);
+    public JSurvey(Font font) {
+        this(new Vector<>(), null, font);
     }
 
-    public JSurvey(Vector<JSurveyEntity> jSurveyEntities, String name) {
+    public JSurvey(Vector<JSurveyEntity> jSurveyEntities, String name, Font font) {
         super();
         this.jSurveyEntities = jSurveyEntities;
 
@@ -23,7 +23,8 @@ public class JSurvey extends JPanel {
 
 
         surveyNameLabel = new JLabel(name != null ? name : "새 설문");
-        surveyNameLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 13));
+        surveyNameLabel.setFont(font);
+        surveyNameLabel.setBorder(BorderFactory.createEmptyBorder(35, 0, 0, 0));
         this.add(surveyNameLabel);
 
     }
@@ -48,6 +49,7 @@ public class JSurvey extends JPanel {
         for (JSurveyEntity jSurveyEntity : jSurveyEntities) {
             jSurveyEntity.setFontByChooser(font);
         }
+
     }
 
 }

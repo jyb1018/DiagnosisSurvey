@@ -1,6 +1,7 @@
 import assets.SurveyImageIcons;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
@@ -8,13 +9,14 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Vector;
+import java.util.concurrent.Flow;
 
 import opensource.say.swing.JFontChooser;
 
 
 class SurveyView implements ActionListener, MouseListener {
 
-    private JPanel leftPanel;
+    private JList<JSurveyEntity> leftPanel;
     private JPanel rightPanel;
     private JFrame jFrame;
     private Font font;
@@ -40,7 +42,6 @@ class SurveyView implements ActionListener, MouseListener {
     private JDialog editSurveyDialog;
 
 
-
     SurveyView(SurveyController surveyController) {
 
         // window style
@@ -60,7 +61,6 @@ class SurveyView implements ActionListener, MouseListener {
 
         controller = surveyController;
         jSurveyMap = new HashMap<>();
-
 
 
         font = new Font("맑은 고딕", Font.PLAIN, 13);
@@ -133,7 +133,7 @@ class SurveyView implements ActionListener, MouseListener {
         centerPanel.setLayout(new GridBagLayout());
 
 
-        leftPanel = new JPanel();
+        leftPanel = new JList<>();
         rightPanel = new JPanel();
         JScrollPane scroll_right = new JScrollPane();
         scroll_right.setViewportView(rightPanel);
@@ -167,6 +167,7 @@ class SurveyView implements ActionListener, MouseListener {
         FlowLayout surveyLayout2 = new FlowLayout();
         surveyLayout2.setVgap(10);
         leftPanel.setLayout(surveyLayout2);
+//        leftPanel.setPreferredSize(new Dimension(648, 1000));
         left_dim = leftPanel.getPreferredSize();
         left_dim.height += 10;
         leftPanel.setPreferredSize(left_dim);
@@ -178,10 +179,12 @@ class SurveyView implements ActionListener, MouseListener {
         scroll_right.setMaximumSize(new Dimension(150, 0));
         scroll_right.setMinimumSize(new Dimension(150, 0));
 
+
         centerPanel.add(scroll_left, new GridBagConstraints(0, 0, 1, 1, 4.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                 new Insets(0, 0, 0, 0), 0, 0));
         centerPanel.add(scroll_right, new GridBagConstraints(1, 0, 1, 1, 0.0, 1.0, GridBagConstraints.EAST, GridBagConstraints.VERTICAL,
                 new Insets(0, 0, 0, 0), 0, 0));
+
 
 
         // 폰트 선택
@@ -195,25 +198,24 @@ class SurveyView implements ActionListener, MouseListener {
         aboutArea.setLineWrap(true);
         aboutArea.append("License\n\n\n\n" +
 
-                        "Copyright 2004-2008 Masahiko SAWAI All Rights Reserved.\n\n" +
-                        "Permission is hereby granted, free of charge, to any person obtaining" +
-                        "a copy of this software and associated documentation files (the \"Software\")," +
-                        "to deal in the Software without restriction, including without limitation" +
-                        "the rights to use, copy, modify, merge, publish, distribute, sublicense," +
-                        "and/or sell copies of the Software, and to permit persons to whom" +
-                        "the Software is furnished to do so, subject to the following conditions:\n\n" +
-                        "The above copyright notice and this permission notice shall be included" +
-                        "in all copies or substantial portions of the Software.\n\n" +
-                        "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS" +
-                        "OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY," +
-                        "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL" +
-                        "THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER" +
-                        "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM," +
-                        "OUT OF OR IN CONNECTION WITH THE SOFTWARE" +
-                        "OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n\n\n" +
-                        "안녕"
+                "Copyright 2004-2008 Masahiko SAWAI All Rights Reserved.\n\n" +
+                "Permission is hereby granted, free of charge, to any person obtaining" +
+                "a copy of this software and associated documentation files (the \"Software\")," +
+                "to deal in the Software without restriction, including without limitation" +
+                "the rights to use, copy, modify, merge, publish, distribute, sublicense," +
+                "and/or sell copies of the Software, and to permit persons to whom" +
+                "the Software is furnished to do so, subject to the following conditions:\n\n" +
+                "The above copyright notice and this permission notice shall be included" +
+                "in all copies or substantial portions of the Software.\n\n" +
+                "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS" +
+                "OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY," +
+                "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL" +
+                "THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER" +
+                "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM," +
+                "OUT OF OR IN CONNECTION WITH THE SOFTWARE" +
+                "OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n\n\n" +
+                "안녕"
         );
-
 
 
     }
@@ -258,13 +260,11 @@ class SurveyView implements ActionListener, MouseListener {
     }
 
 
-
-
     void showSurveyEntities(JSurvey jSurvey) {
 
         Dimension dimension = leftPanel.getPreferredSize();
         leftPanel.removeAll();
-        if(jSurvey == null)
+        if (jSurvey == null)
             return;
         if (tempJSurvey != null)
             jSurveyMap.get(tempJSurvey.hashCode()).setBackground(new Color(178, 176, 66));
@@ -284,17 +284,18 @@ class SurveyView implements ActionListener, MouseListener {
         jFrame.setLocationByPlatform(true);
 
 
-
         // 한국어
         jFrame.setVisible(true);
     }
 
     void setFont_Dialog() {
         jFontChooser.showDialog(jFrame);
-        font = jFontChooser.getFont();
+        font = jFontChooser.getSelectedFont();
         for (JSurvey jSurvey : jSurveyMap.values()) {
             jSurvey.setFontByChooser(font);
         }
+        leftPanel.removeAll();
+        showSurveyEntities(tempJSurvey);
         refresh();
     }
 
@@ -398,6 +399,11 @@ class SurveyView implements ActionListener, MouseListener {
         jFrame.setState(state);
     }
 
+    public Font getFont() {
+        return font;
+    }
+
+
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() instanceof JMenuItem) {
@@ -438,13 +444,15 @@ class SurveyView implements ActionListener, MouseListener {
                 case "이름 바꾸기":
                     parent = (JPopupMenu) ((JMenuItem) e.getSource()).getParent();
                     targetJSurvey = ((JSurvey) parent.getInvoker());
-                    // TODO 이거 가능하면 깔끔하게 JDialog 새로 만들어서 보내줄것
-                    String name = JOptionPane.showInputDialog("설문의 이름을 새로 입력하세요.");
-                    if(name != null)
+                    // TODO 이거 가능하면 깔끔하게 JDialog 새로 만들어서 보내줄것]
+
+                    String name = JOptionPane.showInputDialog("새로운 이름을 입력하세요.",
+                            targetJSurvey.getSurveyNameLabel().getText());
+                    if (name != null)
                         controller.renameSurvey(targetJSurvey, name);
                     break;
                 case "편집":
-                     parent = (JPopupMenu) ((JMenuItem) e.getSource()).getParent();
+                    parent = (JPopupMenu) ((JMenuItem) e.getSource()).getParent();
                     targetJSurvey = ((JSurvey) parent.getInvoker());
                     editSurvey_Dialog(targetJSurvey);
                     break;
@@ -457,7 +465,6 @@ class SurveyView implements ActionListener, MouseListener {
             }
         }
     }
-
 
 
     @Override
@@ -512,6 +519,7 @@ class SurveyView implements ActionListener, MouseListener {
     void refresh() {
         jFrame.revalidate();
         jFrame.repaint();
+
     }
 
 
