@@ -162,8 +162,11 @@ public class JSurveyEditDialog extends JDialog implements ActionListener {
             this.dispose();
         } else if (e.getSource() == addBtn) {
             String description = inputField.getText().trim();
-            if(description.equals(""))
+            if(description.equals("")) {
+                inputField.setText("");
+                inputField.requestFocus();
                 return;
+            }
             JSurveyEntity jSurveyEntity = new JSurveyEntity(description, new Vector<>(), jSurvey, parentView.getFont());
             jSurvey.getJSurveyEntities().add(jSurveyEntity);
             model.addElement(jSurveyEntity);

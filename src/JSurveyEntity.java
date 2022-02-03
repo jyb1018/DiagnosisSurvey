@@ -1,6 +1,10 @@
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.font.FontRenderContext;
+import java.awt.font.LineBreakMeasurer;
+import java.text.AttributedCharacterIterator;
+import java.text.AttributedString;
 import java.util.Vector;
 
 public class JSurveyEntity extends JPanel {
@@ -18,7 +22,7 @@ public class JSurveyEntity extends JPanel {
         this.jSurvey = jSurvey;
         yn = null;
 
-        this.setLayout(new GridLayout(2, 1));
+        this.setLayout(new BorderLayout());
         this.setBackground(Color.white);
 
 
@@ -27,10 +31,10 @@ public class JSurveyEntity extends JPanel {
         descriptionLabel = new JTextArea(description);
         descriptionLabel.setLineWrap(true);
         descriptionLabel.setMaximumSize(new Dimension(600, 600));
-        descriptionLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
+        descriptionLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         descriptionLabel.setEditable(false);
         descriptionLabel.setFont(font);
-        this.add(descriptionLabel);
+        this.add(descriptionLabel, BorderLayout.CENTER);
 
         ButtonGroup ynRadio = new ButtonGroup();
         JRadioButton yRadio = new JRadioButton("예");
@@ -45,8 +49,7 @@ public class JSurveyEntity extends JPanel {
         radioPanel.add(yRadio);
         radioPanel.add(nRadio);
 
-        this.add(radioPanel);
-
+        this.add(radioPanel, BorderLayout.SOUTH);
     }
 
 
@@ -99,6 +102,24 @@ public class JSurveyEntity extends JPanel {
         if(prev_idx != str.length()-1)
             v.add(str.substring(prev_idx+1));
         return v;
+    }
+
+    public int countLines() {
+        AttributedString text = new AttributedString(descriptionLabel.getText());
+        FontRenderContext frc = descriptionLabel.getFontMetrics(descriptionLabel.getFont())
+                .getFontRenderContext();
+        AttributedCharacterIterator charIt = text.getIterator();
+        LineBreakMeasurer lineMeasurer = new LineBreakMeasurer(charIt, frc);
+        float formatWidth = (float) (this.getPreferredSize().width - 20);
+        lineMeasurer.setPosition(charIt.getBeginIndex());
+
+        int noLines = 0;
+        while (lineMeasurer.getPosition() < charIt.getEndIndex()) {
+            lineMeasurer.nextLayout(formatWidth);
+            noLines++;
+        }
+
+        return noLines;
     }
 
 

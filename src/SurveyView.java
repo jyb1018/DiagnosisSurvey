@@ -264,6 +264,8 @@ class SurveyView implements ActionListener, MouseListener {
 
         Dimension dimension = leftPanel.getPreferredSize();
         leftPanel.removeAll();
+        dimension.height = 0;
+        leftPanel.setPreferredSize(dimension);
         if(jSurvey == null)
             return;
         if (tempJSurvey != null)
@@ -271,11 +273,13 @@ class SurveyView implements ActionListener, MouseListener {
         tempJSurvey = jSurvey;
         jSurvey.setBackground(new Color(77, 79, 189));
         for (JSurveyEntity jSurveyEntity : jSurvey.getJSurveyEntities()) {
-            int lines = jSurveyEntity.getDescriptionLabel().getLineCount();
-            Dimension dim = jSurveyEntity.getDescriptionLabel().getPreferredSize();
-            dim.height = lines * font.getSize();
-            jSurveyEntity.getDescriptionLabel().setPreferredSize(dim);
-            dimension.height += jSurveyEntity.getPreferredSize().getHeight();
+            int lines = jSurveyEntity.countLines();
+            Dimension dim = jSurveyEntity.getPreferredSize();
+            dim.height = lines * (font.getSize() + 2) + 53;
+            jSurveyEntity.setPreferredSize(dim);
+            dimension.height += jSurveyEntity.getPreferredSize().getHeight() - 10;
+            System.out.println(jSurveyEntity.getPreferredSize());
+            leftPanel.setPreferredSize(dimension);
             leftPanel.add(jSurveyEntity);
         }
 
@@ -299,6 +303,7 @@ class SurveyView implements ActionListener, MouseListener {
         for (JSurvey jSurvey : jSurveyMap.values()) {
             jSurvey.setFontByChooser(font);
         }
+        showSurveyEntities(tempJSurvey);
         refresh();
     }
 
