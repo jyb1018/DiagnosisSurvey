@@ -20,6 +20,7 @@ public class JSurvey extends JPanel {
         this.setMinimumSize(new Dimension(100, 100));
         this.setMaximumSize(new Dimension(100, 100));
         this.setBackground(new Color(178, 176, 66));
+        this.setBorder(BorderFactory.createEmptyBorder(35, 0, 0, 0));
 
 
         surveyNameLabel = new JLabel(name != null ? name : "새 설문");

@@ -74,7 +74,7 @@ class SurveyController {
 
     JSurveyEntity makeJSurveyEntity(SurveyEntity entity, JSurvey jSurvey) {
         Vector<String> prescriptions = new Vector<>(entity.getPrescriptions());
-        return new JSurveyEntity(entity.getDescription(), prescriptions, jSurvey);
+        return new JSurveyEntity(entity.getDescription(), prescriptions, jSurvey, view.getFont());
     }
 
     void appendSurvey(Survey survey) {

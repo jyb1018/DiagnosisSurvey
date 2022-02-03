@@ -11,7 +11,7 @@ public class JSurveyEntity extends JPanel {
     private Vector<String> prescriptions;
     private Boolean yn;
 
-    public JSurveyEntity(String description, Vector<String> prescriptions, JSurvey jSurvey) {
+    public JSurveyEntity(String description, Vector<String> prescriptions, JSurvey jSurvey, Font font) {
         super();
         this.prescriptions = prescriptions;
         this.description = description;
@@ -24,13 +24,12 @@ public class JSurveyEntity extends JPanel {
 
         this.setPreferredSize(new Dimension(620, 120));
 
-
         descriptionLabel = new JTextArea(description);
         descriptionLabel.setLineWrap(true);
         descriptionLabel.setMaximumSize(new Dimension(600, 600));
         descriptionLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
         descriptionLabel.setEditable(false);
-        descriptionLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 13));
+        descriptionLabel.setFont(font);
         this.add(descriptionLabel);
 
         ButtonGroup ynRadio = new ButtonGroup();
@@ -82,6 +81,10 @@ public class JSurveyEntity extends JPanel {
 
     public void setYn(Boolean yn) {
         this.yn = yn;
+    }
+
+    public JTextArea getDescriptionLabel() {
+        return descriptionLabel;
     }
 
     private Vector<String> cutString(String str, int length) {

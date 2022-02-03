@@ -271,6 +271,10 @@ class SurveyView implements ActionListener, MouseListener {
         tempJSurvey = jSurvey;
         jSurvey.setBackground(new Color(77, 79, 189));
         for (JSurveyEntity jSurveyEntity : jSurvey.getJSurveyEntities()) {
+            int lines = jSurveyEntity.getDescriptionLabel().getLineCount();
+            Dimension dim = jSurveyEntity.getDescriptionLabel().getPreferredSize();
+            dim.height = lines * font.getSize();
+            jSurveyEntity.getDescriptionLabel().setPreferredSize(dim);
             dimension.height += jSurveyEntity.getPreferredSize().getHeight();
             leftPanel.add(jSurveyEntity);
         }
@@ -291,7 +295,7 @@ class SurveyView implements ActionListener, MouseListener {
 
     void setFont_Dialog() {
         jFontChooser.showDialog(jFrame);
-        font = jFontChooser.getFont();
+        font = jFontChooser.getSelectedFont();
         for (JSurvey jSurvey : jSurveyMap.values()) {
             jSurvey.setFontByChooser(font);
         }
@@ -398,6 +402,10 @@ class SurveyView implements ActionListener, MouseListener {
         jFrame.setState(state);
     }
 
+    public Font getFont() {
+        return font;
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() instanceof JMenuItem) {
@@ -439,7 +447,8 @@ class SurveyView implements ActionListener, MouseListener {
                     parent = (JPopupMenu) ((JMenuItem) e.getSource()).getParent();
                     targetJSurvey = ((JSurvey) parent.getInvoker());
                     // TODO 이거 가능하면 깔끔하게 JDialog 새로 만들어서 보내줄것
-                    String name = JOptionPane.showInputDialog("설문의 이름을 새로 입력하세요.");
+                    String name = JOptionPane.showInputDialog("설문의 이름을 새로 입력하세요.",
+                            targetJSurvey.getSurveyNameLabel().getText());
                     if(name != null)
                         controller.renameSurvey(targetJSurvey, name);
                     break;
