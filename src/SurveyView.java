@@ -5,62 +5,52 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Vector;
+import java.util.*;
 
 import opensource.say.swing.JFontChooser;
 
 
 class SurveyView implements ActionListener, MouseListener {
 
+    private SurveyController controller;
+
     private JPanel leftPanel;
     private JPanel rightPanel;
     private JFrame jFrame;
     private Font font;
-    public static SurveyController controller = null;
 
-    private JPopupMenu jPopupMenu = null;
-    private JFileChooser jFileChooser_open = null;
-    private JFileChooser jFileChooser_save = null;
+    private JPopupMenu jPopupMenu;
+    private JFileChooser jFileChooser_open;
+    private JFileChooser jFileChooser_save;
+    private JButton surveyResultBtn;
 
     private JFontChooser jFontChooser;
 
     private JSurveyEditDialog surveyEditDialog;
+    private JSurveyResultDialog surveyResultDialog;
 
     //정보
     private JTextArea aboutArea;
 
-    //중첩 클래스에서 ActionListener 접근용
-    private final SurveyView surveyView = this;
-
     private JSurvey tempJSurvey = null;
+    private Dimension prevFrameSize;
 
-    HashMap<Integer, JSurvey> jSurveyMap;
-    private JDialog editSurveyDialog;
-
+    private HashSet<JSurvey> jSurveySet;
 
 
     SurveyView(SurveyController surveyController) {
 
-        // window style
-        if (System.getProperty("os.name").toLowerCase().contains("win"))
-            try {
-                UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (UnsupportedLookAndFeelException e) {
-                e.printStackTrace();
-            }
+        // os style changer
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage());
+            return;
+        }
 
 
         controller = surveyController;
-        jSurveyMap = new HashMap<>();
-
+        jSurveySet = new HashSet<>();
 
 
         font = new Font("맑은 고딕", Font.PLAIN, 13);
@@ -78,6 +68,8 @@ class SurveyView implements ActionListener, MouseListener {
 
         // 사전 인스턴스화 필요한 컴포넌트
         surveyEditDialog = new JSurveyEditDialog(controller, this);
+        surveyResultDialog = new JSurveyResultDialog();
+
 
 
         // 상단 메뉴 바
@@ -119,6 +111,59 @@ class SurveyView implements ActionListener, MouseListener {
         jMenuBar.add(editMenu);
         jMenuBar.add(viewMenu);
         jMenuBar.add(helpMenu);
+
+        jPopupMenu = new JPopupMenu();
+        JMenuItem editItem = new JMenuItem("편집", KeyEvent.VK_E);
+        JMenuItem deleteItem = new JMenuItem("삭제", KeyEvent.VK_D);
+        JMenuItem renameItem = new JMenuItem("이름 바꾸기", KeyEvent.VK_M);
+
+        editItem.addActionListener(this);
+        deleteItem.addActionListener(this);
+        renameItem.addActionListener(this);
+
+
+        jPopupMenu.add(editItem);
+        jPopupMenu.addSeparator();
+        jPopupMenu.add(deleteItem);
+        jPopupMenu.add(renameItem);
+
+
+        jFileChooser_open = new JFileChooser();
+        jFileChooser_open.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        jFileChooser_open.setCurrentDirectory(new File(System.getProperty("user.dir")));
+        jFileChooser_open.setFileFilter(
+                new FileNameExtensionFilter("설문 프리셋 파일(.sur)", "sur"));
+
+        // 왜 JDK는 한국어 기본번역을 없애버렸을까
+        // 이거작동안함 ㅠㅠ
+        jFileChooser_open.setLocale(Locale.KOREA);
+
+        jFileChooser_save = null;
+        jFileChooser_save = new JFileChooser();
+        jFileChooser_save.setDialogType(JFileChooser.SAVE_DIALOG);
+        jFileChooser_save.setCurrentDirectory(new File(System.getProperty("user.dir")));
+        jFileChooser_save.setFileFilter(
+                new FileNameExtensionFilter("설문 프리셋 파일(.sur)", "sur"));
+
+
+        surveyResultBtn = new JButton("결과 확인");
+        surveyResultBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                for (JSurveyEntity jSurveyEntity : tempJSurvey.getJSurveyEntities()) {
+                    Boolean yn = jSurveyEntity.getYn();
+                    if(yn == null) {
+                        JOptionPane.showMessageDialog(jFrame, "체크하지 않은 답변이 있습니다.");
+                        return;
+                    }
+                }
+                controller.updateEntitiesYn(tempJSurvey);
+                surveyResultDialog.setResult(controller.calcSurveyResult(tempJSurvey));
+                surveyResultDialog.setVisible(true);
+            }
+        });
+
+
 
         JPanel centerPanel = new JPanel();
 
@@ -183,6 +228,20 @@ class SurveyView implements ActionListener, MouseListener {
         centerPanel.add(scroll_right, new GridBagConstraints(1, 0, 1, 1, 0.0, 1.0, GridBagConstraints.EAST, GridBagConstraints.VERTICAL,
                 new Insets(0, 0, 0, 0), 0, 0));
 
+        prevFrameSize = jFrame.getSize();
+
+        jFrame.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                if((prevFrameSize.width != jFrame.getSize().width || jFrame.getWidth() == jFrame.getMinimumSize().width)
+                        && tempJSurvey != null)
+                    showSurveyEntities(tempJSurvey);
+                   super.componentResized(e);
+            }
+
+
+        });
+
 
         // 폰트 선택
         jFontChooser = new JFontChooser();
@@ -195,25 +254,24 @@ class SurveyView implements ActionListener, MouseListener {
         aboutArea.setLineWrap(true);
         aboutArea.append("License\n\n\n\n" +
 
-                        "Copyright 2004-2008 Masahiko SAWAI All Rights Reserved.\n\n" +
-                        "Permission is hereby granted, free of charge, to any person obtaining" +
-                        "a copy of this software and associated documentation files (the \"Software\")," +
-                        "to deal in the Software without restriction, including without limitation" +
-                        "the rights to use, copy, modify, merge, publish, distribute, sublicense," +
-                        "and/or sell copies of the Software, and to permit persons to whom" +
-                        "the Software is furnished to do so, subject to the following conditions:\n\n" +
-                        "The above copyright notice and this permission notice shall be included" +
-                        "in all copies or substantial portions of the Software.\n\n" +
-                        "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS" +
-                        "OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY," +
-                        "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL" +
-                        "THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER" +
-                        "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM," +
-                        "OUT OF OR IN CONNECTION WITH THE SOFTWARE" +
-                        "OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n\n\n" +
-                        "안녕"
+                "Copyright 2004-2008 Masahiko SAWAI All Rights Reserved.\n\n" +
+                "Permission is hereby granted, free of charge, to any person obtaining" +
+                "a copy of this software and associated documentation files (the \"Software\")," +
+                "to deal in the Software without restriction, including without limitation" +
+                "the rights to use, copy, modify, merge, publish, distribute, sublicense," +
+                "and/or sell copies of the Software, and to permit persons to whom" +
+                "the Software is furnished to do so, subject to the following conditions:\n\n" +
+                "The above copyright notice and this permission notice shall be included" +
+                "in all copies or substantial portions of the Software.\n\n" +
+                "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS" +
+                "OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY," +
+                "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL" +
+                "THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER" +
+                "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM," +
+                "OUT OF OR IN CONNECTION WITH THE SOFTWARE" +
+                "OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n\n\n" +
+                "안녕"
         );
-
 
 
     }
@@ -221,14 +279,14 @@ class SurveyView implements ActionListener, MouseListener {
 
     void appendJSurvey(JSurvey jSurvey) {
         jSurvey.addMouseListener(this);
-        jSurveyMap.put(jSurvey.hashCode(), jSurvey);
+        jSurveySet.add(jSurvey);
         rightPanel.add(jSurvey);
         Dimension dimension = rightPanel.getPreferredSize();
         dimension.height += 110;
         rightPanel.setPreferredSize(dimension);
         showSurveyEntities(jSurvey);
-
         tempJSurvey = jSurvey;
+
         refresh();
 
         JScrollBar scrollBar1 = ((JScrollPane) leftPanel.getParent().getParent()).getVerticalScrollBar();
@@ -258,30 +316,24 @@ class SurveyView implements ActionListener, MouseListener {
     }
 
 
+    private void showSurveyEntities(JSurvey jSurvey) {
 
-
-    void showSurveyEntities(JSurvey jSurvey) {
 
         Dimension dimension = leftPanel.getPreferredSize();
-        leftPanel.removeAll();
         dimension.height = 0;
+        leftPanel.removeAll();
         leftPanel.setPreferredSize(dimension);
-        if(jSurvey == null)
+        if (jSurvey == null)
             return;
         if (tempJSurvey != null)
-            jSurveyMap.get(tempJSurvey.hashCode()).setBackground(new Color(178, 176, 66));
+            tempJSurvey.setBackground(new Color(178, 176, 66));
         tempJSurvey = jSurvey;
         jSurvey.setBackground(new Color(77, 79, 189));
-        for (JSurveyEntity jSurveyEntity : jSurvey.getJSurveyEntities()) {
-            int lines = jSurveyEntity.countLines();
-            Dimension dim = jSurveyEntity.getPreferredSize();
-            dim.height = lines * (font.getSize() + 2) + 53;
-            jSurveyEntity.setPreferredSize(dim);
-            dimension.height += jSurveyEntity.getPreferredSize().getHeight() - 10;
-            System.out.println(jSurveyEntity.getPreferredSize());
-            leftPanel.setPreferredSize(dimension);
-            leftPanel.add(jSurveyEntity);
-        }
+
+        resizeJSurveyEntities();
+
+        if(jSurvey.getJSurveyEntities().size() != 0)
+            leftPanel.add(surveyResultBtn);
 
         refresh();
     }
@@ -292,7 +344,6 @@ class SurveyView implements ActionListener, MouseListener {
         jFrame.setLocationByPlatform(true);
 
 
-
         // 한국어
         jFrame.setVisible(true);
     }
@@ -300,7 +351,7 @@ class SurveyView implements ActionListener, MouseListener {
     void setFont_Dialog() {
         jFontChooser.showDialog(jFrame);
         font = jFontChooser.getSelectedFont();
-        for (JSurvey jSurvey : jSurveyMap.values()) {
+        for (JSurvey jSurvey : jSurveySet) {
             jSurvey.setFontByChooser(font);
         }
         showSurveyEntities(tempJSurvey);
@@ -346,52 +397,35 @@ class SurveyView implements ActionListener, MouseListener {
 
     }
 
-    void editSurveyEntity_Dialog() {
-
-    }
 
 
     void loadPreset() {
-        // if null, init
-        if (jFileChooser_open == null) {
 
-            jFileChooser_open = new JFileChooser();
-            jFileChooser_open.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            jFileChooser_open.setFileFilter(new FileNameExtensionFilter("설문 프리셋 파일(.sur)", "sur"));
-
-            // 왜 JDK는 한국어 기본번역을 없애버렸을까
-            // 이거작동안함
-            jFileChooser_open.setLocale(Locale.KOREA);
-
-        }
 
         if (jFileChooser_open.showOpenDialog(jFrame) != JFileChooser.APPROVE_OPTION)
             return;
 
         File file = jFileChooser_open.getSelectedFile();
         try {
-//            controller.fileRead(file);
-            System.out.println("파일 읽기 완료");
+            controller.fileRead(file);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     void savePreset() {
-        //if null, init
-        if (jFileChooser_open == null) {
-            jFileChooser_save = new JFileChooser();
-            jFileChooser_save.setDialogType(JFileChooser.SAVE_DIALOG);
-            jFileChooser_save.setFileFilter(new FileNameExtensionFilter("설문 프리셋 파일(.sur)", "sur"));
-        }
+
 
         if (jFileChooser_save.showSaveDialog(jFrame) != JFileChooser.APPROVE_OPTION)
             return;
 
         File file = jFileChooser_save.getSelectedFile();
+        File parentDir = file.getParentFile();
+        String fileName = file.getName();
+        if(!fileName.substring(fileName.length() - 4).equals(".sur"))
+            file = new File(parentDir.getPath() + File.separator + fileName + ".sur");
         try {
-//            controller.fileWrite(file);
-            System.out.println("파일 쓰기 완료");
+            controller.fileWrite(file);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -399,17 +433,39 @@ class SurveyView implements ActionListener, MouseListener {
         JOptionPane.showMessageDialog(jFrame, "성공적으로 저장했습니다.");
     }
 
-    public int getJFrameState() {
-        return jFrame.getState();
-    }
 
-    public void setJFrameState(int state) {
-        jFrame.setState(state);
-    }
+
 
     public Font getFont() {
         return font;
     }
+
+    private void resizeJSurveyEntities() {
+
+        Dimension dimension = leftPanel.getPreferredSize();
+        int width = jFrame.getSize().width;
+        if(tempJSurvey != null) {
+            for (JSurveyEntity jSurveyEntity : tempJSurvey.getJSurveyEntities()) {
+                Dimension size = jSurveyEntity.getPreferredSize();
+                size.width = width - 180;
+                jSurveyEntity.setPreferredSize(size);
+                int lines = jSurveyEntity.countLines();
+                Dimension dim = jSurveyEntity.getPreferredSize();
+                dim.height = lines * (font.getSize() + 2) + 53;
+                jSurveyEntity.setPreferredSize(dim);
+                dimension.height += jSurveyEntity.getPreferredSize().getHeight() - 10;
+                leftPanel.setPreferredSize(dimension);
+                leftPanel.add(jSurveyEntity);
+            }
+            refresh();
+
+
+        }
+    }
+
+
+
+
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -427,14 +483,12 @@ class SurveyView implements ActionListener, MouseListener {
                     savePreset();
                     break;
                 case "새 설문":
-                    controller.appendSurvey(new Survey());
+                    controller.appendSurvey(new Survey(controller));
                     break;
                 case "모든 설문 삭제":
-                    // ConcurrentModificationException's Solution
-                    Vector<JSurvey> values = new Vector<>(jSurveyMap.values());
-                    for (JSurvey jSurvey : values) {
+                    for (JSurvey jSurvey : jSurveySet) {
                         controller.removeSurvey(jSurvey);
-                        jSurveyMap.remove(jSurvey.hashCode());
+                        jSurveySet.remove(jSurvey);
                     }
                     break;
                 case "폰트":
@@ -451,14 +505,13 @@ class SurveyView implements ActionListener, MouseListener {
                 case "이름 바꾸기":
                     parent = (JPopupMenu) ((JMenuItem) e.getSource()).getParent();
                     targetJSurvey = ((JSurvey) parent.getInvoker());
-                    // TODO 이거 가능하면 깔끔하게 JDialog 새로 만들어서 보내줄것
                     String name = JOptionPane.showInputDialog("설문의 이름을 새로 입력하세요.",
                             targetJSurvey.getSurveyNameLabel().getText());
-                    if(name != null)
+                    if (name != null)
                         controller.renameSurvey(targetJSurvey, name);
                     break;
                 case "편집":
-                     parent = (JPopupMenu) ((JMenuItem) e.getSource()).getParent();
+                    parent = (JPopupMenu) ((JMenuItem) e.getSource()).getParent();
                     targetJSurvey = ((JSurvey) parent.getInvoker());
                     editSurvey_Dialog(targetJSurvey);
                     break;
@@ -466,35 +519,15 @@ class SurveyView implements ActionListener, MouseListener {
                     parent = (JPopupMenu) ((JMenuItem) e.getSource()).getParent();
                     targetJSurvey = ((JSurvey) parent.getInvoker());
                     controller.removeSurvey(targetJSurvey);
-                    jSurveyMap.remove(targetJSurvey.hashCode());
+                    jSurveySet.remove(targetJSurvey);
                     break;
             }
         }
     }
 
 
-
     @Override
     public void mouseClicked(MouseEvent e) {
-        // if null, init
-        if (jPopupMenu == null) {
-            jPopupMenu = new JPopupMenu();
-            JMenuItem editItem = new JMenuItem("편집", KeyEvent.VK_E);
-            JMenuItem deleteItem = new JMenuItem("삭제", KeyEvent.VK_D);
-            JMenuItem renameItem = new JMenuItem("이름 바꾸기", KeyEvent.VK_M);
-
-            editItem.addActionListener(this);
-            deleteItem.addActionListener(this);
-            renameItem.addActionListener(this);
-
-
-            jPopupMenu.add(editItem);
-            jPopupMenu.addSeparator();
-            jPopupMenu.add(deleteItem);
-            jPopupMenu.add(renameItem);
-        }
-
-
         if (SwingUtilities.isLeftMouseButton(e))
             showSurveyEntities((JSurvey) e.getComponent());
         else if (SwingUtilities.isRightMouseButton(e))

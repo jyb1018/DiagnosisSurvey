@@ -2,9 +2,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.Vector;
 
-public class JSurveyEditDialog extends JDialog implements ActionListener {
+public class JSurveyEditDialog extends JDialog implements ActionListener, KeyListener {
 
     // Controller in MVC
     private final SurveyController controller;
@@ -24,9 +26,9 @@ public class JSurveyEditDialog extends JDialog implements ActionListener {
 
     private JSurvey jSurvey;
 
+
     // child dialog
     private final JSurveyEditEntityDialog jSurveyEditEntityDialog;
-    private String childAction = null;
 
     public JSurveyEditDialog(SurveyController controller, SurveyView parentView) {
         this.controller = controller;
@@ -39,6 +41,7 @@ public class JSurveyEditDialog extends JDialog implements ActionListener {
         this.setPreferredSize(new Dimension(800, 600));
         this.setSize(new Dimension(800, 600));
         this.setResizable(false);
+
 
         model = new DefaultListModel<>();
         list = new JList<>(model);
@@ -77,19 +80,13 @@ public class JSurveyEditDialog extends JDialog implements ActionListener {
         bottomPanel.add(confirmBtn);
         bottomPanel.add(cancelBtn);
 
+        this.addKeyListener(this);
+        this.setFocusable(true);
 
         this.add(topPanel, BorderLayout.NORTH);
         this.add(jScrollPane, BorderLayout.CENTER);
         this.add(bottomPanel, BorderLayout.SOUTH);
 
-    }
-
-    public DefaultListModel<JSurveyEntity> getModel() {
-        return model;
-    }
-
-    public void setModel(DefaultListModel<JSurveyEntity> model) {
-        this.model = model;
     }
 
     public JSurvey getJSurvey() {
@@ -140,13 +137,7 @@ public class JSurveyEditDialog extends JDialog implements ActionListener {
         return jScrollPane;
     }
 
-    public String getChildAction() {
-        return childAction;
-    }
 
-    public void setChildAction(String childAction) {
-        this.childAction = childAction;
-    }
 
     public JSurveyEntity getSelectedJSurveyEntity() {
         int selected = list.getSelectedIndex();
@@ -156,31 +147,13 @@ public class JSurveyEditDialog extends JDialog implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == confirmBtn) {
-            controller.editSurvey(jSurvey);
-            this.dispose();
+            submit();
         } else if (e.getSource() == cancelBtn) {
-            this.dispose();
+            cancel();
         } else if (e.getSource() == addBtn) {
-            String description = inputField.getText().trim();
-            if(description.equals("")) {
-                inputField.setText("");
-                inputField.requestFocus();
-                return;
-            }
-            JSurveyEntity jSurveyEntity = new JSurveyEntity(description, new Vector<>(), jSurvey, parentView.getFont());
-            jSurvey.getJSurveyEntities().add(jSurveyEntity);
-            model.addElement(jSurveyEntity);
-            inputField.setText("");
-            inputField.requestFocus();
-            refresh();
+            appendJSurveyEntity();
         } else if (e.getSource() == delBtn) {
-            int selected = list.getSelectedIndex();
-            if (selected != -1) {
-                JSurveyEntity jSurveyEntity = model.getElementAt(selected);
-                model.remove(selected);
-                jSurvey.getJSurveyEntities().removeElement(jSurveyEntity);
-            }
-            refresh();
+            deleteJSurveyEntity();
         } else if (e.getSource() == editPrescriptionsBtn) {
             int selected = list.getSelectedIndex();
             if (selected != -1) {
@@ -192,11 +165,78 @@ public class JSurveyEditDialog extends JDialog implements ActionListener {
         }
     }
 
+    private void submit() {
+        controller.editSurvey(jSurvey);
+        for (JSurveyEntity jSurveyEntity : jSurvey.getJSurveyEntities()) {
+            jSurveyEntity.savePrescriptions();
+            jSurveyEntity.resetRadio();
+        }
+        this.dispose();
+    }
+
+    private void cancel() {
+        for (JSurveyEntity jSurveyEntity : jSurvey.getJSurveyEntities()) {
+            jSurveyEntity.reloadPrescriptions();
+        }
+        this.dispose();
+    }
+
+    private void appendJSurveyEntity() {
+        String description = inputField.getText().trim();
+        if (description.equals("")) {
+            inputField.setText("");
+            inputField.requestFocus();
+            return;
+        }
+        JSurveyEntity jSurveyEntity = new JSurveyEntity(description, new Vector<>(), jSurvey, parentView.getFont());
+        jSurvey.getJSurveyEntities().add(jSurveyEntity);
+        model.addElement(jSurveyEntity);
+        inputField.setText("");
+        inputField.requestFocus();
+        refresh();
+    }
+
+    private void deleteJSurveyEntity() {
+        int selected = list.getSelectedIndex();
+        if (selected != -1) {
+            JSurveyEntity jSurveyEntity = model.getElementAt(selected);
+            model.remove(selected);
+            jSurvey.getJSurveyEntities().removeElement(jSurveyEntity);
+        }
+        refresh();
+    }
 
 
-    void refresh() {
+    private void refresh() {
         this.revalidate();
         this.repaint();
+    }
+
+
+    // KeyListener 먹지 않는다... 다른거 시도해야할듯
+    @Override
+    public void keyTyped(KeyEvent e) {
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_ENTER:
+                appendJSurveyEntity();
+                break;
+            case KeyEvent.VK_ESCAPE:
+                cancel();
+                break;
+            case KeyEvent.VK_DELETE:
+                deleteJSurveyEntity();
+                break;
+        }
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+
     }
 }
 

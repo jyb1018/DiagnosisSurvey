@@ -1,5 +1,4 @@
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineBreakMeasurer;
@@ -10,13 +9,18 @@ import java.util.Vector;
 public class JSurveyEntity extends JPanel {
 
     private final JTextArea descriptionLabel;
+    private final JRadioButton yRadio;
+    private final JRadioButton nRadio;
     private JSurvey jSurvey;
     private String description;
-    private Vector<String> prescriptions;
+    private Vector<SurveyPrescription> prescriptions;
+    private Vector<SurveyPrescription> originPrescriptions;
+
     private Boolean yn;
 
-    public JSurveyEntity(String description, Vector<String> prescriptions, JSurvey jSurvey, Font font) {
+    public JSurveyEntity(String description, Vector<SurveyPrescription> prescriptions, JSurvey jSurvey, Font font) {
         super();
+        this.originPrescriptions = prescriptions;
         this.prescriptions = prescriptions;
         this.description = description;
         this.jSurvey = jSurvey;
@@ -37,9 +41,9 @@ public class JSurveyEntity extends JPanel {
         this.add(descriptionLabel, BorderLayout.CENTER);
 
         ButtonGroup ynRadio = new ButtonGroup();
-        JRadioButton yRadio = new JRadioButton("예");
+        yRadio = new JRadioButton("예");
         yRadio.setBackground(getBackground());
-        JRadioButton nRadio = new JRadioButton("아니오");
+        nRadio = new JRadioButton("아니오");
         nRadio.setBackground(getBackground());
         ynRadio.add(yRadio);
         ynRadio.add(nRadio);
@@ -49,9 +53,11 @@ public class JSurveyEntity extends JPanel {
         radioPanel.add(yRadio);
         radioPanel.add(nRadio);
 
+        yRadio.addActionListener(e -> yn = true);
+        nRadio.addActionListener(e -> yn = false);
+
         this.add(radioPanel, BorderLayout.SOUTH);
     }
-
 
 
     public JSurvey getjSurvey() {
@@ -70,12 +76,21 @@ public class JSurveyEntity extends JPanel {
         this.description = description;
     }
 
-    public Vector<String> getPrescriptions() {
+    public Vector<SurveyPrescription> getPrescriptions() {
         return prescriptions;
     }
 
-    public void setPrescriptions(Vector<String> prescriptions) {
+    public void setPrescriptions(Vector<SurveyPrescription> prescriptions) {
+        originPrescriptions = this.prescriptions;
         this.prescriptions = prescriptions;
+    }
+
+    public void reloadPrescriptions() {
+        prescriptions = originPrescriptions;
+    }
+
+    public void savePrescriptions() {
+        originPrescriptions = prescriptions;
     }
 
     public Boolean getYn() {
@@ -94,13 +109,13 @@ public class JSurveyEntity extends JPanel {
         Vector<String> v = new Vector<>();
         int prev_idx = -1;
         for (int i = 1; i < str.length(); i++) {
-            if(i % length == 0) {
-                v.add(str.substring(prev_idx+1, i+1));
+            if (i % length == 0) {
+                v.add(str.substring(prev_idx + 1, i + 1));
                 prev_idx = i;
             }
         }
-        if(prev_idx != str.length()-1)
-            v.add(str.substring(prev_idx+1));
+        if (prev_idx != str.length() - 1)
+            v.add(str.substring(prev_idx + 1));
         return v;
     }
 
@@ -122,6 +137,12 @@ public class JSurveyEntity extends JPanel {
         return noLines;
     }
 
+    public void resetRadio() {
+        yRadio.setSelected(false);
+        nRadio.setSelected(false);
+    }
+
+
 
     public void setFontByChooser(Font font) {
         descriptionLabel.setFont(font);
@@ -131,12 +152,16 @@ public class JSurveyEntity extends JPanel {
     public String toString() {
         StringBuilder prescription_str = new StringBuilder();
 
-        for (String prescription: prescriptions) {
-            prescription_str.append(prescription).append(", ");
+        for (SurveyPrescription prescriptions : prescriptions) {
+            prescription_str.append(prescriptions.toString()).append(", ");
         }
-        if(prescription_str.length() != 0)
+        if (prescription_str.length() != 0)
             prescription_str.delete(prescription_str.length() - 2, prescription_str.length());
         return "질문 : " + description + " [" + prescription_str + "]";
 
     }
+
+
+
+
 }

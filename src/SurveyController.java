@@ -1,15 +1,22 @@
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 class SurveyController {
     private SurveyView view;
-    public HashMap<JSurvey, Survey> surveyMap;
+    private HashMap<JSurvey, Survey> surveyMap;
+    private HashMap<JSurvey, HashMap<JSurveyEntity, SurveyEntity>> surveyEntityMap;
 
     SurveyController() {
         surveyMap = new HashMap<>();
+        surveyEntityMap = new HashMap<>();
         view = new SurveyView(this);
 
 
@@ -19,43 +26,17 @@ class SurveyController {
         view.showMain();
     }
 
-    void menu_newSurvey() {
-
-    }
-
-    void menu_openSurvey() {
-
-    }
-
-    void menu_saveSurvey() {
-
-    }
-
-    void menu_setFont() {
-
-    }
-
-    void menu_info() {
-
-    }
-
-    void survey_submit() {
-
-    }
-
-    void survey_return() {
-
-    }
-
-    void survey_executeAnotherSurvey(SurveyEntity survey) {
-
-    }
-
 
 
     // View 연동
-    void entityUpdate() {
+    void updateEntitiesYn(JSurvey jSurvey) {
 
+        HashMap<JSurveyEntity, SurveyEntity> internalMap = surveyEntityMap.get(jSurvey);
+        for (Map.Entry<JSurveyEntity, SurveyEntity> entry : internalMap.entrySet()) {
+            JSurveyEntity key_jSurveyEntity = entry.getKey();
+            SurveyEntity value_surveyEntity = entry.getValue();
+            value_surveyEntity.setYn(key_jSurveyEntity.getYn());
+        }
     }
 
     void editSurvey(JSurvey jSurvey) {
@@ -63,18 +44,20 @@ class SurveyController {
         view.refresh();
     }
 
-    JSurvey makeJSurvey(Survey survey) {
+    private JSurvey makeJSurvey(Survey survey) {
         JSurvey ret = new JSurvey();
         ret.setSurveyName(survey.getName());
-        for (SurveyEntity entity :survey.getEntities()) {
+        for (SurveyEntity entity : survey.getEntities()) {
             ret.getJSurveyEntities().add(makeJSurveyEntity(entity, ret));
         }
         return ret;
     }
 
-    JSurveyEntity makeJSurveyEntity(SurveyEntity entity, JSurvey jSurvey) {
-        Vector<String> prescriptions = new Vector<>(entity.getPrescriptions());
-        return new JSurveyEntity(entity.getDescription(), prescriptions, jSurvey, view.getFont());
+    private JSurveyEntity makeJSurveyEntity(SurveyEntity entity, JSurvey jSurvey) {
+        Vector<SurveyPrescription> prescriptions = new Vector<>(entity.getPrescriptions());
+        JSurveyEntity jSurveyEntity = new JSurveyEntity(entity.getDescription(), prescriptions, jSurvey, view.getFont());
+        setLink(jSurvey, jSurveyEntity, entity);
+        return jSurveyEntity;
     }
 
     void appendSurvey(Survey survey) {
@@ -94,7 +77,52 @@ class SurveyController {
         view.refresh();
     }
 
-    // TODO 다시짤것
+    void setLink(JSurvey jSurvey, JSurveyEntity jSurveyEntity, SurveyEntity surveyEntity) {
+        surveyEntityMap.putIfAbsent(jSurvey, new HashMap<>());
+        HashMap<JSurveyEntity, SurveyEntity> internalMap = surveyEntityMap.get(jSurvey);
+        internalMap.put(jSurveyEntity, surveyEntity);
+
+    }
+
+    void removeLinks(JSurvey jSurvey) {
+        if (surveyEntityMap.get(jSurvey) != null)
+            for (JSurveyEntity jSurveyEntity : jSurvey.getJSurveyEntities())
+                surveyEntityMap.get(jSurvey).remove(jSurveyEntity);
+    }
+
+
+    HashMap<String, String> calcSurveyResult(JSurvey jSurvey) {
+        Survey survey = surveyMap.get(jSurvey);
+        // <타입, <이름, 수>>
+        HashMap<String, HashMap<String, Integer>> prescriptionMap = new HashMap<>();
+
+        for (SurveyEntity surveyEntity : survey.getEntities()) {
+            if (surveyEntity.getYn()) {
+                for (SurveyPrescription prescription : surveyEntity.getPrescriptions()) {
+                    HashMap<String, Integer> internalMap = prescriptionMap.computeIfAbsent(
+                            prescription.getType(), k -> new HashMap<>());
+                    internalMap.merge(prescription.getName(), 1, Integer::sum);
+                }
+            }
+        }
+
+
+        // 타입, 이름
+        HashMap<String, String> retMap = new HashMap<>();
+        for (Map.Entry<String, HashMap<String, Integer>> entry : prescriptionMap.entrySet()) {
+            String type = entry.getKey();
+            HashMap<String, Integer> internalMap = entry.getValue();
+            String maxPrescriptionName = "";
+            for (String name : internalMap.keySet()) {
+                if (maxPrescriptionName.equals("") || internalMap.get(name) > internalMap.get(maxPrescriptionName))
+                    maxPrescriptionName = name;
+            }
+            retMap.put(type, maxPrescriptionName);
+        }
+
+        return retMap;
+    }
+
     // File 연동
     void fileRead(File file) throws Exception {
         InputStreamReader isr = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
@@ -102,30 +130,29 @@ class SurveyController {
 
         StringBuilder dataStr = new StringBuilder();
         String str;
-        while((str = reader.readLine()) != null) {
+        while ((str = reader.readLine()) != null) {
             dataStr.append(str);
         }
-        String[] splits1 = dataStr.toString().split("\\$");
-        for (String line : splits1) {
-            String[] splits2 = line.split("\\^");
-            String description = splits2[0];
-            Vector<String> prescriptions = new Vector<>(Arrays.asList(splits2).subList(1, splits2.length));
-//                entities.add(new SurveyEntity(description, prescriptions));
-        }
+        JSONParser jsonParser = new JSONParser();
+        JSONArray surveyJSONs = (JSONArray) jsonParser.parse(dataStr.toString());
+
+        for (Object surveyJSON : surveyJSONs)
+            appendSurvey(new Survey((JSONObject) surveyJSON, this));
+
+
 
     }
 
     void fileWrite(File file) throws Exception {
         OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
         BufferedWriter bw = new BufferedWriter(osw);
-        StringBuilder dataStr = new StringBuilder();
-        for (Survey survey : surveyMap.values()) {
-            dataStr.append(survey.toString());
-        }
-        bw.write(dataStr.toString());
+        JSONArray surveyJSONs = new JSONArray();
+        for (Survey survey : surveyMap.values())
+            surveyJSONs.add(survey.toJSON());
 
+        bw.write(surveyJSONs.toString());
+        bw.flush();
     }
-
 
 
     // DB 연동

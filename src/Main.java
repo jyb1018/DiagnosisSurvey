@@ -7,19 +7,19 @@ public class Main {
         Vector<String> d = new Vector<>();
         d.add("질문1");
         d.add("질문2");
-        Vector<String> p1 = new Vector<>();
-        p1.add("처방1");
-        p1.add("처방2");
-        Vector<String> p2 = new Vector<>();
-        p2.add("처방1");
-        p2.add("처방3");
+        Vector<SurveyPrescription> p1 = new Vector<>();
+        p1.add(new SurveyPrescription("처방1", "레이저"));
+        p1.add(new SurveyPrescription("처방2", "레이저"));
+        Vector<SurveyPrescription> p2 = new Vector<>();
+        p2.add(new SurveyPrescription("처방1", "레이저"));
+        p2.add(new SurveyPrescription("처방3", "주사시술"));
         SurveyEntity entity1 = new SurveyEntity("질문1", p1);
         SurveyEntity entity2 = new SurveyEntity("질문2", p2);
         Vector<SurveyEntity> entities = new Vector<>();
         entities.add(entity1);
         entities.add(entity2);
 
-        sc.appendSurvey(new Survey("설문1", entities));
+        sc.appendSurvey(new Survey("설문1", entities, sc));
 
     }
 
@@ -36,3 +36,11 @@ public class Main {
 
     }
 }
+
+
+
+// TODO 는 아니고 추가로 하면 좋은 것
+// tooltip text 설정하기
+// 도움말 다이얼로그 만들기
+// Github README 만들기
+// 정보란 라이센스 작성하기

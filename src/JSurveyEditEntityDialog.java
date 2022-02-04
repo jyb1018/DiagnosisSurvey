@@ -2,11 +2,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
-import java.util.Collections;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.Vector;
 
-public class JSurveyEditEntityDialog extends JDialog implements ActionListener {
+public class JSurveyEditEntityDialog extends JDialog implements ActionListener, KeyListener {
 
     //Controller in MVC
     private final SurveyController controller;
@@ -14,19 +14,18 @@ public class JSurveyEditEntityDialog extends JDialog implements ActionListener {
     // parent dialog
     private JSurveyEditDialog parentDialog;
 
-    private JList<String> list;
-    private JTextField inputField;
+    private JList<SurveyPrescription> list;
+    private JTextField nameInputField;
+    private JTextField typeInputField;
     private JButton addBtn;
     private JButton delBtn;
     private JButton confirmBtn;
     private JButton cancelBtn;
 
-    private DefaultListModel<String> model;
+    private DefaultListModel<SurveyPrescription> model;
     private JScrollPane jScrollPane;
 
     private JSurveyEntity jSurveyEntity;
-
-
 
 
     public JSurveyEditEntityDialog(SurveyController controller, JSurveyEditDialog parentDialog) {
@@ -40,17 +39,19 @@ public class JSurveyEditEntityDialog extends JDialog implements ActionListener {
         this.setSize(new Dimension(400, 300));
         this.setResizable(false);
 
+        this.addKeyListener(this);
+
         model = new DefaultListModel<>();
         list = new JList<>(model);
-        inputField = new JTextField(13);
+        nameInputField = new JTextField(13);
+        typeInputField = new JTextField(13);
         addBtn = new JButton("추가");
         delBtn = new JButton("삭제");
         confirmBtn = new JButton("확인");
         cancelBtn = new JButton("취소");
 
-        inputField.setFont(new Font("맑은 고딕", Font.PLAIN, 15));
-
-        inputField.setFont(new Font("맑은 고딕", Font.PLAIN, 15));
+        nameInputField.setFont(new Font("맑은 고딕", Font.PLAIN, 15));
+        typeInputField.setFont(new Font("맑은 고딕", Font.PLAIN, 15));
 
         confirmBtn.addActionListener(this);
         addBtn.addActionListener(this);
@@ -60,7 +61,15 @@ public class JSurveyEditEntityDialog extends JDialog implements ActionListener {
         this.setLayout(new BorderLayout());
 
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        topPanel.add(inputField);
+        JPanel informTextPanel = new JPanel(new GridLayout(2, 1, 0, 23));
+        JPanel textFieldPanel = new JPanel(new GridLayout(2, 1, 0, 10));
+        informTextPanel.add(new JLabel("이름 "));
+        informTextPanel.add(new JLabel("종류 "));
+        textFieldPanel.add(nameInputField);
+        textFieldPanel.add(typeInputField);
+
+        topPanel.add(informTextPanel);
+        topPanel.add(textFieldPanel);
         topPanel.add(addBtn);
         topPanel.add(delBtn);
         topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -68,7 +77,7 @@ public class JSurveyEditEntityDialog extends JDialog implements ActionListener {
         jScrollPane = new JScrollPane(list);
         jScrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT,10, 10));
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         bottomPanel.add(confirmBtn);
         bottomPanel.add(cancelBtn);
 
@@ -81,29 +90,44 @@ public class JSurveyEditEntityDialog extends JDialog implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == addBtn) {
-            String text = inputField.getText().trim();
-            if(!text.equals(""))
-                model.addElement(text);
-            inputField.setText("");
-            inputField.requestFocus();
-        } else if(e.getSource() == delBtn) {
-            int selected = list.getSelectedIndex();
-            model.removeElementAt(selected);
-        } else if(e.getSource() == confirmBtn) {
-            Vector<String> prescriptions = new Vector<>();
-            for (int i = 0; i < model.size(); i++) {
-                prescriptions.add(model.get(i));
-            }
-            parentDialog.getSelectedJSurveyEntity().setPrescriptions(prescriptions);
-            this.dispose();
-        } else if(e.getSource() == cancelBtn) {
+            add();
+        } else if (e.getSource() == delBtn) {
+            delete();
+        } else if (e.getSource() == confirmBtn) {
+            confirm();
+        } else if (e.getSource() == cancelBtn) {
             this.dispose();
         }
     }
 
+    private void add() {
+        String name = nameInputField.getText().trim();
+        String type = typeInputField.getText().trim();
+        if (!name.equals("") && !type.equals("")) {
+            model.addElement(new SurveyPrescription(name, type));
+            typeInputField.setText("");
+            nameInputField.setText("");
+            nameInputField.requestFocus();
+        }
+    }
+
+    private void delete() {
+        int selected = list.getSelectedIndex();
+        model.removeElementAt(selected);
+    }
+
+    private void confirm() {
+        Vector<SurveyPrescription> prescriptions = new Vector<>();
+        for (int i = 0; i < model.size(); i++) {
+            prescriptions.add(model.get(i));
+        }
+        parentDialog.getSelectedJSurveyEntity().setPrescriptions(prescriptions);
+        this.dispose();
+    }
+
     public void updateList(JSurveyEntity jSurveyEntity) {
         model.removeAllElements();
-        for (String prescription :jSurveyEntity.getPrescriptions()) {
+        for (SurveyPrescription prescription : jSurveyEntity.getPrescriptions()) {
             model.addElement(prescription);
         }
         refresh();
@@ -112,5 +136,30 @@ public class JSurveyEditEntityDialog extends JDialog implements ActionListener {
     public void refresh() {
         revalidate();
         repaint();
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_DELETE:
+                delete();
+                break;
+            case KeyEvent.VK_ESCAPE:
+                this.dispose();
+                break;
+            case KeyEvent.VK_ENTER:
+                add();
+                break;
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+
     }
 }
