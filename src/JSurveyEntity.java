@@ -1,7 +1,11 @@
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Element;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineBreakMeasurer;
+import java.awt.font.LineMetrics;
+import java.awt.font.TextAttribute;
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
 import java.util.Vector;
@@ -30,7 +34,7 @@ public class JSurveyEntity extends JPanel {
         this.setBackground(Color.white);
 
 
-        this.setPreferredSize(new Dimension(620, 120));
+        this.setPreferredSize(new Dimension(620, 0));
 
         descriptionLabel = new JTextArea(description);
         descriptionLabel.setLineWrap(true);
@@ -121,10 +125,13 @@ public class JSurveyEntity extends JPanel {
 
     public int countLines() {
         AttributedString text = new AttributedString(descriptionLabel.getText());
+        text.addAttribute(TextAttribute.FONT, descriptionLabel.getFont());
         FontRenderContext frc = descriptionLabel.getFontMetrics(descriptionLabel.getFont())
                 .getFontRenderContext();
+        descriptionLabel.getDocument().getDefaultRootElement();
         AttributedCharacterIterator charIt = text.getIterator();
         LineBreakMeasurer lineMeasurer = new LineBreakMeasurer(charIt, frc);
+
         float formatWidth = (float) (this.getPreferredSize().width - 20);
         lineMeasurer.setPosition(charIt.getBeginIndex());
 
@@ -135,6 +142,8 @@ public class JSurveyEntity extends JPanel {
         }
 
         return noLines;
+
+
     }
 
     public void resetRadio() {

@@ -2,7 +2,7 @@
   <artifact type="jar" name="DiagnosisSurvey:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/DiagnosisSurvey_jar</output-path>
     <root id="archive" name="DiagnosisSurvey.jar">
-      <element id="module-output" name="DiagnosisSurvey" />
+      <element id="module-output" name="JDiagnosisSurvey" />
     </root>
   </artifact>
 </component>

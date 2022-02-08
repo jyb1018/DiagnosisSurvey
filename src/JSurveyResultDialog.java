@@ -14,7 +14,7 @@ public class JSurveyResultDialog extends JDialog {
         this.setResizable(false);
 
         JPanel centerPanel = new JPanel();
-        String[] header = {"타입", "이름"};
+        String[] header = {"종류", "이름"};
         model = new DefaultTableModel(header, 0);
         JTable resultTable = new JTable(model) {
             @Override
