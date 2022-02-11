@@ -139,6 +139,7 @@ class SurveyController {
         for (Object surveyJSON : surveyJSONs)
             appendSurvey(new Survey((JSONObject) surveyJSON, this));
 
+        reader.close();
 
 
     }
@@ -152,6 +153,7 @@ class SurveyController {
 
         bw.write(surveyJSONs.toString());
         bw.flush();
+        bw.close();
 
     }
 

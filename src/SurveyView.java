@@ -779,7 +779,7 @@ class SurveyView implements ActionListener, MouseListener {
         File file = jFileChooser_save.getSelectedFile();
         File parentDir = file.getParentFile();
         String fileName = file.getName();
-        if (fileName.length() < 5 || fileName.split(".").length == 0)
+        if (fileName.length() < 5 || fileName.split("[.]").length == 0)
             file = new File(parentDir.getPath() + File.separator + fileName + ".sur");
 
         try {
@@ -791,6 +791,7 @@ class SurveyView implements ActionListener, MouseListener {
         }
 
         JOptionPane.showMessageDialog(jFrame, "성공적으로 저장했습니다.");
+
     }
 
 
