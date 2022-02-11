@@ -779,8 +779,9 @@ class SurveyView implements ActionListener, MouseListener {
         File file = jFileChooser_save.getSelectedFile();
         File parentDir = file.getParentFile();
         String fileName = file.getName();
-        if (fileName.length() < 5 || !fileName.substring(fileName.length() - 4).equals(".sur"))
+        if (fileName.length() < 5 || fileName.split(".").length == 0)
             file = new File(parentDir.getPath() + File.separator + fileName + ".sur");
+
         try {
             controller.fileWrite(file);
         } catch (Exception e) {
