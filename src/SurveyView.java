@@ -765,6 +765,7 @@ class SurveyView implements ActionListener, MouseListener {
         try {
             controller.fileRead(file);
         } catch (Exception e) {
+            JOptionPane.showMessageDialog(jFrame, "파일을 읽는 도중 문제가 발생했습니다.");
             e.printStackTrace();
         }
     }
@@ -783,7 +784,9 @@ class SurveyView implements ActionListener, MouseListener {
         try {
             controller.fileWrite(file);
         } catch (Exception e) {
+            JOptionPane.showMessageDialog(jFrame, "파일을 저장하는 도중 문제가 발생했습니다.");
             e.printStackTrace();
+            return;
         }
 
         JOptionPane.showMessageDialog(jFrame, "성공적으로 저장했습니다.");
