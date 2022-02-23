@@ -112,12 +112,18 @@ class SurveyController {
         for (Map.Entry<String, HashMap<String, Integer>> entry : prescriptionMap.entrySet()) {
             String type = entry.getKey();
             HashMap<String, Integer> internalMap = entry.getValue();
-            String maxPrescriptionName = "";
+            int maxval = 0;
+            StringBuilder maxPrescriptionName = new StringBuilder();
             for (String name : internalMap.keySet()) {
-                if (maxPrescriptionName.equals("") || internalMap.get(name) > internalMap.get(maxPrescriptionName))
-                    maxPrescriptionName = name;
+                if (maxPrescriptionName.toString().equals("") || internalMap.get(name) > maxval) {
+                    maxval = internalMap.get(name);
+                    maxPrescriptionName = new StringBuilder(name);
+                }
+                else if(internalMap.get(name) == maxval) {
+                    maxPrescriptionName.append("/").append(name);
+                }
             }
-            retMap.put(type, maxPrescriptionName);
+            retMap.put(type, maxPrescriptionName.toString());
         }
 
         return retMap;

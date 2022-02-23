@@ -21,13 +21,16 @@ public class JSurveyResultDialog extends JDialog {
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
+
         };
         JScrollPane jScrollPane = new JScrollPane(resultTable);
 
+        resultTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
 
         centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         centerPanel.add(jScrollPane);
+
 
         this.add(centerPanel);
         this.pack();

@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.util.Locale;
 import java.util.Vector;
 
 public class Main {
@@ -188,6 +189,7 @@ public class Main {
 
         SurveyController sc = new SurveyController();
         Main.makeExample(sc);
+        Locale.setDefault(Locale.KOREAN );
 
 
         sc.start();

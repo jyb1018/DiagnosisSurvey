@@ -779,7 +779,7 @@ class SurveyView implements ActionListener, MouseListener {
         File file = jFileChooser_save.getSelectedFile();
         File parentDir = file.getParentFile();
         String fileName = file.getName();
-        if (fileName.length() < 5 || fileName.split("[.]").length == 0)
+        if (fileName.length() < 5 || fileName.split("[.]").length < 2)
             file = new File(parentDir.getPath() + File.separator + fileName + ".sur");
 
         try {
@@ -872,8 +872,8 @@ class SurveyView implements ActionListener, MouseListener {
                     targetJSurvey = ((JSurvey) parent.getInvoker());
                     String name = JOptionPane.showInputDialog("설문의 이름을 새로 입력하세요.",
                             targetJSurvey.getSurveyNameLabel().getText());
-                    if (name != null)
-                        controller.renameSurvey(targetJSurvey, name);
+                    if (name.trim() != null)
+                        controller.renameSurvey(targetJSurvey, name.trim());
                     break;
                 case "편집":
                     parent = (JPopupMenu) ((JMenuItem) e.getSource()).getParent();
