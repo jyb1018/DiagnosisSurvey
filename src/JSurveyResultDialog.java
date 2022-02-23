@@ -1,9 +1,15 @@
+import assets.SurveyImageIcons;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
+import java.awt.*;
 import java.util.Arrays;
 import java.util.HashMap;
 
 public class JSurveyResultDialog extends JDialog {
+    private final JTable resultTable;
     private DefaultTableModel model;
 
     public JSurveyResultDialog() {
@@ -11,28 +17,27 @@ public class JSurveyResultDialog extends JDialog {
         this.setLocationByPlatform(true);
         this.setModal(true);
         this.setTitle("결과 확인");
-        this.setResizable(false);
+        this.setPreferredSize(new Dimension(400, 400));
+        this.setResizable(true);
+        this.setIconImage(SurveyImageIcons.surveyIcon.getImage());
 
-        JPanel centerPanel = new JPanel();
+
         String[] header = {"종류", "이름"};
         model = new DefaultTableModel(header, 0);
-        JTable resultTable = new JTable(model) {
+        resultTable = new JTable(model) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
 
         };
-        JScrollPane jScrollPane = new JScrollPane(resultTable);
-
-        resultTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-
-
-        centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        centerPanel.add(jScrollPane);
+        JScrollPane jScrollPane = new JScrollPane(resultTable,
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        resultTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
 
-        this.add(centerPanel);
+        jScrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        this.add(jScrollPane);
         this.pack();
     }
 
@@ -47,6 +52,20 @@ public class JSurveyResultDialog extends JDialog {
             row[0] = type;
             row[1] = resultMap.get(type);
             model.addRow(row);
+        }
+        resizeColumnWidth(resultTable);
+    }
+
+    public void resizeColumnWidth(JTable table) {
+        final TableColumnModel columnModel = table.getColumnModel();
+        for (int column = 0; column < table.getColumnCount(); column++) {
+            int width = 180; // Min width
+            for (int row = 0; row < table.getRowCount(); row++) {
+                TableCellRenderer renderer = table.getCellRenderer(row, column);
+                Component comp = table.prepareRenderer(renderer, row, column);
+                width = Math.max(comp.getPreferredSize().width + 1, width);
+            }
+            columnModel.getColumn(column).setPreferredWidth(width);
         }
     }
 
